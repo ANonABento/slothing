@@ -1,11 +1,11 @@
 "use client";
 
-import { AlertTriangle, Check, Loader2, Plug, Settings2 } from "lucide-react";
+import { AlertTriangle, Check, KeyRound, Loader2, Plug, Settings2 } from "lucide-react";
 import Link from "next/link";
-import { useSearchParams, useSelectedLayoutSegment } from "next/navigation";
+import { useRouter, useSearchParams, useSelectedLayoutSegment } from "next/navigation";
 import { useEffect, useRef, useState, useTransition, type ReactNode } from "react";
 
-import { saveSettingsAction, testLlmAction } from "@/app/actions";
+import { saveApiKeyAction, saveSettingsAction, testLlmAction } from "@/app/actions";
 import type { ProviderStatus } from "@/lib/llm";
 import { safe } from "@/lib/safe";
 import { MODE_SAVED_EVENT, applyAppearance } from "@/lib/theme";
@@ -36,7 +36,6 @@ function ModelSection({ ai, providers, onChange }: { ai: Settings["ai"]; provide
   const chosen = ai.provider ? providers.find((p) => p.provider === ai.provider)! : null;
   const fallback = providers.find((p) => p.hasKey);
   const withKey = providers.filter((p) => p.hasKey);
-  const withoutKey = providers.filter((p) => !p.hasKey);
   // The provider that will actually be called, so the model field edits the right one.
   const active = chosen?.hasKey ? chosen : fallback;
 
@@ -58,7 +57,7 @@ function ModelSection({ ai, providers, onChange }: { ai: Settings["ai"]; provide
   ];
 
   return (
-    <Section title="AI model" description="Used for importing resumes, reading job posts, tailoring and cover letters. API keys stay in v2/.env.local.">
+    <Section title="AI model" description="Used for importing resumes, reading job posts, tailoring and cover letters. Keys are stored on this computer, in Slothing's database.">
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Provider">
           <Dropdown
@@ -90,10 +89,12 @@ function ModelSection({ ai, providers, onChange }: { ai: Settings["ai"]; provide
         <p className="flex items-start gap-2 text-sm text-warn">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
           <span>
-            {chosen.keyEnv} isn&apos;t set{fallback ? `, so ${fallback.label} is used until you add it` : ""}.
+            {chosen.label} has no API key{fallback ? `, so ${fallback.label} is used until you add one` : ""}.
           </span>
         </p>
       )}
+
+      <ApiKeys providers={providers} onSaved={() => setTest({ state: "idle" })} />
 
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-rule pt-4">
         <Button size="sm" onClick={runTest} disabled={!active || test.state === "running"}>
@@ -103,12 +104,83 @@ function ModelSection({ ai, providers, onChange }: { ai: Settings["ai"]; provide
         {test.state === "error" && <span className="text-sm text-warn">{test.text}</span>}
         {test.state === "idle" && (
           <span className="text-xs text-ink-3">
-            {withKey.length ? `Key found for ${withKey.map((p) => p.label).join(", ")}.` : "No API keys found."}
-            {withoutKey.length > 0 && ` Add ${withoutKey.map((p) => p.keyEnv).join(" or ")} to use ${withoutKey.length > 1 ? "the others" : withoutKey[0].label}.`}
+            {withKey.length ? `Sends a one-word request to ${active?.label}.` : "Add an API key above to use AI. Editing and PDFs work without it."}
           </span>
         )}
       </div>
     </Section>
+  );
+}
+
+/** One row per provider. Saved right away (not with the save bar), since keys never go to the browser. */
+function ApiKeys({ providers, onSaved }: { providers: ProviderStatus[]; onSaved: () => void }) {
+  return (
+    <div>
+      <Label>API keys</Label>
+      <ul className="mt-1.5 divide-y divide-rule rounded-control border border-rule">
+        {providers.map((p) => (
+          <ApiKeyRow key={p.provider} p={p} onSaved={onSaved} />
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function ApiKeyRow({ p, onSaved }: { p: ProviderStatus; onSaved: () => void }) {
+  const router = useRouter();
+  const [editing, setEditing] = useState(false);
+  const [key, setKey] = useState("");
+  const [error, setError] = useState("");
+  const [pending, start] = useTransition();
+  const save = (value: string) =>
+    start(async () => {
+      setError("");
+      const res = await safe(() => saveApiKeyAction(p.provider, value));
+      if (!res.ok) return setError(res.error);
+      setKey("");
+      setEditing(false);
+      onSaved();
+      router.refresh();
+    });
+  const hint = p.keyHint ? ` ····${p.keyHint}` : "";
+  const form = (
+    <form
+      className="flex flex-1 items-center gap-2"
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (key.trim()) save(key);
+      }}
+    >
+      <Input type="password" value={key} onChange={(e) => setKey(e.target.value)} placeholder={`Paste your ${p.label} API key`} aria-label={`${p.label} API key`} autoComplete="off" spellCheck={false} className="min-w-0 flex-1" />
+      <Button size="sm" variant="primary" disabled={!key.trim() || pending}>{pending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Save"}</Button>
+      {editing && <Button size="sm" variant="ghost" type="button" onClick={() => (setEditing(false), setKey(""))}>Cancel</Button>}
+    </form>
+  );
+  return (
+    <li className="px-3 py-2.5">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+        <span className="flex w-24 items-center gap-1.5 text-sm font-medium">
+          <KeyRound className={cx("h-3.5 w-3.5", p.hasKey ? "text-ok" : "text-ink-3")} />
+          {p.label}
+        </span>
+        {p.keySource === "env" ? (
+          <span className="text-xs text-ink-3" title="Set in the environment, which wins over a key saved here">
+            From <code className="font-mono">{p.keyEnv}</code> in v2/.env.local{hint}
+          </span>
+        ) : p.keySource === "settings" && !editing ? (
+          <>
+            <span className="font-mono text-xs text-ink-2">Saved{hint}</span>
+            <span className="ml-auto flex gap-1">
+              <Button size="sm" variant="ghost" onClick={() => setEditing(true)} disabled={pending}>Replace</Button>
+              <Button size="sm" variant="ghost" onClick={() => save("")} disabled={pending}>Remove</Button>
+            </span>
+          </>
+        ) : (
+          form
+        )}
+      </div>
+      {error && <p className="mt-1.5 text-xs text-warn">{error}</p>}
+    </li>
   );
 }
 

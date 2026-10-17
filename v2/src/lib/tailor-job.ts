@@ -2,7 +2,7 @@ import * as db from "./db";
 import { fitResume } from "./fit";
 import { llmInfo } from "./llm";
 import { profileAsTailored } from "./resolve";
-import { groundResume, tailorResume } from "./tailor";
+import { groundResume, tailorResume, writeCoverLetter } from "./tailor";
 import type { DocMeta, Warning } from "./types";
 
 /**
@@ -25,4 +25,14 @@ export async function tailorJob(jobId: string, useAI: boolean) {
   if (fitted.overflow) all.unshift({ where: "Page length", message: `Your pinned items alone run past ${layout.pages === "two" ? "2 pages" : "1 page"}. Unpin something or change Page length in Settings.` });
   const meta: DocMeta = useAI ? { source: "ai", provider: llm?.provider, model: llm?.model, latitude: tailoring.latitude } : { source: "auto" };
   db.saveDoc(jobId, "resume", doc, all, meta);
+}
+
+/** Write a job's cover letter with AI and save it: the job page's button and the extension's both call this. */
+export async function writeLetter(jobId: string) {
+  const job = db.getJob(jobId);
+  if (!job) throw new Error("Job not found");
+  const settings = db.getSettings();
+  const llm = llmInfo();
+  const { doc, warnings } = await writeCoverLetter(db.getProfile(), job, settings.tailoring, settings.letter);
+  db.saveDoc(jobId, "cover_letter", doc, warnings, { source: "ai", provider: llm?.provider, model: llm?.model });
 }

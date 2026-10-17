@@ -67,6 +67,7 @@ export const api = {
   status: (c: Connection, url: string, jobId?: string) => call<Status>(c, "status", { url, jobId }),
   seen: (c: Connection, page: { url: string; title: string; html: string; text: string }) => call<{ job: JobSummary | null; before: string | null }>(c, "seen", page),
   tailor: (c: Connection, jobId: string, ai: boolean) => call<{ job: JobSummary }>(c, "tailor", { jobId, ai }),
+  letter: (c: Connection, jobId: string) => call<{ job: JobSummary }>(c, "letter", { jobId }),
   applied: (c: Connection, a: { jobId: string; url: string; fields: FormField[] }) => call<{ job: JobSummary }>(c, "applied", a),
   saveJob: (c: Connection, page: { url: string; html: string; text: string }) => call<{ job: JobSummary; created: boolean }>(c, "job", page),
   fill: (c: Connection, jobId: string | undefined, fields: FormField[]) => call<{ fills: Fill[]; skipped: Skip[] }>(c, "fill", { jobId, fields }),

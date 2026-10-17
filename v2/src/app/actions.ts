@@ -7,10 +7,10 @@ import * as db from "@/lib/db";
 import { jobForUrl, resetExtensionKey } from "@/lib/extension";
 import { extractText, parseResumeText, reuseIds } from "@/lib/import";
 import { readJob } from "@/lib/job-import";
-import { llmInfo, testLlm } from "@/lib/llm";
-import { tailorJob } from "@/lib/tailor-job";
-import { draftAnswers, groundResume, letterWarnings, rewordBullet, writeCoverLetter, type DraftAnswer, type Rewording } from "@/lib/tailor";
-import { CoverLetter, JOB_STATUSES, Profile, Settings, TailoredBullet, TailoredResume, type AiSettings, type DocKind, type Warning } from "@/lib/types";
+import { saveKey, testLlm } from "@/lib/llm";
+import { tailorJob, writeLetter } from "@/lib/tailor-job";
+import { draftAnswers, groundResume, letterWarnings, rewordBullet, type DraftAnswer, type Rewording } from "@/lib/tailor";
+import { CoverLetter, JOB_STATUSES, PROVIDERS, Profile, Settings, TailoredBullet, TailoredResume, type AiSettings, type DocKind, type Warning } from "@/lib/types";
 import { z } from "zod";
 
 export type Result<T = undefined> = { ok: true; data?: T } | { ok: false; error: string };
@@ -74,6 +74,19 @@ export async function setThemeModeAction(mode: "light" | "dark"): Promise<Result
 export async function testLlmAction(ai: AiSettings): Promise<Result<{ provider: string; model: string; ms: number }>> {
   try {
     return { ok: true, data: await testLlm(Settings.shape.ai.parse(ai)) };
+  } catch (e) {
+    return fail(e);
+  }
+}
+
+/** An API key entered in Settings ("" removes it). Kept in the database, never sent back to the browser. */
+export async function saveApiKeyAction(provider: string, key: string): Promise<Result> {
+  try {
+    const k = z.string().max(500).parse(key).trim();
+    if (/\s/.test(k)) return { ok: false, error: "That key has spaces in it. Paste only the key." };
+    saveKey(z.enum(PROVIDERS).parse(provider), k);
+    revalidatePath("/", "layout");
+    return { ok: true };
   } catch (e) {
     return fail(e);
   }
@@ -176,11 +189,8 @@ export async function rewordBulletAction(jobId: string, bullet: { text: string; 
 
 export async function writeLetterAction(jobId: string): Promise<Result> {
   try {
-    const job = requireJob(jobId);
-    const settings = db.getSettings();
-    const llm = llmInfo();
-    const { doc, warnings } = await writeCoverLetter(db.getProfile(), job, settings.tailoring, settings.letter);
-    db.saveDoc(jobId, "cover_letter", doc, warnings, { source: "ai", provider: llm?.provider, model: llm?.model });
+    requireJob(jobId);
+    await writeLetter(jobId);
     revalidatePath(`/jobs/${jobId}`);
     return { ok: true };
   } catch (e) {

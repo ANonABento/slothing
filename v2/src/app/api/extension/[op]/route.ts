@@ -29,6 +29,11 @@ const OPS: Record<string, (body: unknown) => unknown> = {
     revalidatePath(`/jobs/${r.job.id}`);
     return r;
   },
+  letter: async (b) => {
+    const r = await ext.letter(b);
+    revalidatePath(`/jobs/${r.job.id}`);
+    return r;
+  },
   applied: (b) => {
     const r = ext.applied(b);
     revalidatePath("/");

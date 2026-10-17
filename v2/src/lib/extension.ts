@@ -6,8 +6,8 @@ import * as db from "./db";
 import { importJobFromPage, linkedInJobId, linkedInTitle, parsePostingUrl, postingKey } from "./job-import";
 import { llmConfigured } from "./llm";
 import { draftAnswers, type DraftAnswer } from "./tailor";
-import { tailorJob } from "./tailor-job";
-import type { Job, JobStatus } from "./types";
+import { tailorJob, writeLetter } from "./tailor-job";
+import type { Job, JobStatus, Warning } from "./types";
 
 /* ─── The browser extension's API ───
  * The extension calls these from its popup (never from a web page): it holds a key, shown on the
@@ -64,6 +64,8 @@ export interface JobSummary {
   status: JobStatus;
   resume: boolean;
   letter: boolean;
+  /** What to check before sending: the grounding checks and page length, as on the job page. */
+  warnings: { resume: Warning[]; letter: Warning[] };
   /** Whether there's a description to tailor from (a LinkedIn posting seen in passing may not have one). */
   described: boolean;
   lastSeenAt: string | null;
@@ -71,17 +73,22 @@ export interface JobSummary {
   appliedAt: string | null;
 }
 
-const summary = (j: Job): JobSummary => ({
-  id: j.id,
-  title: j.title,
-  company: j.company,
-  status: j.status,
-  resume: Boolean(db.getDoc(j.id, "resume")),
-  letter: Boolean(db.getDoc(j.id, "cover_letter")),
-  described: Boolean(j.description.trim()),
-  lastSeenAt: j.lastSeenAt,
-  appliedAt: db.listApplications(j.id)[0]?.submittedAt ?? null,
-});
+function summary(j: Job): JobSummary {
+  const resume = db.getDoc(j.id, "resume");
+  const letter = db.getDoc(j.id, "cover_letter");
+  return {
+    id: j.id,
+    title: j.title,
+    company: j.company,
+    status: j.status,
+    resume: Boolean(resume),
+    letter: Boolean(letter),
+    warnings: { resume: resume?.warnings ?? [], letter: letter?.warnings ?? [] },
+    described: Boolean(j.description.trim()),
+    lastSeenAt: j.lastSeenAt,
+    appliedAt: db.listApplications(j.id)[0]?.submittedAt ?? null,
+  };
+}
 
 /** The saved job a page belongs to: the posting itself, or its application form. */
 export function jobForUrl(url: string): Job | null {
@@ -180,6 +187,15 @@ export async function tailor(input: unknown): Promise<{ job: JobSummary }> {
   await tailorJob(jobId, ai);
   const job = db.getJob(jobId)!;
   if (job.status === "seen") db.setJobStatus(jobId, "saved");
+  return { job: summary(db.getJob(jobId)!) };
+}
+
+const LetterInput = z.object({ jobId: z.string() });
+
+export async function letter(input: unknown): Promise<{ job: JobSummary }> {
+  const { jobId } = LetterInput.parse(input);
+  if (!db.getJob(jobId)) throw new Error("Job not found");
+  await writeLetter(jobId);
   return { job: summary(db.getJob(jobId)!) };
 }
 

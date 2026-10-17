@@ -6,6 +6,7 @@ import { Dropdown } from "@/components/dropdown";
 import { Button, Eyebrow, Input, buttonClass, cx } from "@/components/ui";
 import type { AnswerProposal, Fill, FormField, Skip } from "@/lib/autofill";
 import type { JobSummary } from "@/lib/extension";
+import type { Warning } from "@/lib/types";
 import { ago } from "@/lib/format";
 import { hostOf, jobKey, pageOf, rememberedJob, tabKey, type RememberedJob, type TabState } from "./session";
 import {
@@ -303,7 +304,7 @@ function JobSection({
   before: string | null;
   open: (path: string) => void;
 }) {
-  const [busy, setBusy] = useState<"" | "save" | "tailor-ai" | "tailor">("");
+  const [busy, setBusy] = useState<"" | "save" | "tailor-ai" | "tailor" | "letter">("");
   const [error, setError] = useState("");
   const [note, setNote] = useState("");
 
@@ -320,7 +321,8 @@ function JobSection({
     setBusy("");
   };
   const save = () => run("save", async () => (await api.saveJob(conn, await readPosting(tab))).job, "Saved to your jobs.");
-  const tailor = (ai: boolean) => run(ai ? "tailor-ai" : "tailor", async () => (await api.tailor(conn, job!.id, ai)).job, "Resume tailored. Open the job to review it.");
+  const tailor = (ai: boolean) => run(ai ? "tailor-ai" : "tailor", async () => (await api.tailor(conn, job!.id, ai)).job, "Resume tailored. Look it over before you send it.");
+  const writeLetter = () => run("letter", async () => (await api.letter(conn, job!.id)).job, "Cover letter written. Look it over before you send it.");
 
   if (job) {
     const seen = job.status === "seen";
@@ -344,24 +346,31 @@ function JobSection({
           </>
         ) : (
           <>
-            <div className="flex flex-wrap items-center gap-1.5">
-              <DocChip ok={job.resume} label="Resume" />
-              <DocChip ok={job.letter} label="Cover letter" />
-            </div>
-            {!job.resume && job.described && (
-              <div className="flex gap-2">
-                <Button variant="primary" size="sm" onClick={() => tailor(status.llm)} disabled={busy !== ""} className="flex-1">
-                  {busy.startsWith("tailor") ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : status.llm ? <Sparkles className="h-3.5 w-3.5" /> : <Wand2 className="h-3.5 w-3.5" />}
-                  {busy.startsWith("tailor") ? "Tailoring…" : status.llm ? "Tailor resume" : "Tailor without AI"}
-                </Button>
-                {status.llm && (
-                  <Button variant="ghost" size="sm" onClick={() => tailor(false)} disabled={busy !== ""} title="Pick and fit your bullets by relevance, no AI">
-                    Without AI
+            <DocRow label="Resume" ok={job.resume} warnings={job.warnings.resume} onView={() => open(`/api/pdf?kind=resume&job=${encodeURIComponent(job.id)}`)} onReview={() => open(`/jobs/${job.id}`)}>
+              {job.described && (
+                <div className="flex gap-2">
+                  <Button variant="primary" size="sm" onClick={() => tailor(status.llm)} disabled={busy !== ""} className="flex-1">
+                    {busy.startsWith("tailor") ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : status.llm ? <Sparkles className="h-3.5 w-3.5" /> : <Wand2 className="h-3.5 w-3.5" />}
+                    {busy.startsWith("tailor") ? "Tailoring…" : status.llm ? "Tailor resume" : "Tailor without AI"}
                   </Button>
-                )}
-              </div>
-            )}
+                  {status.llm && (
+                    <Button variant="ghost" size="sm" onClick={() => tailor(false)} disabled={busy !== ""} title="Pick and fit your bullets by relevance, no AI">
+                      Without AI
+                    </Button>
+                  )}
+                </div>
+              )}
+            </DocRow>
             {busy === "tailor-ai" && <p className="text-xs text-ink-3">AI tailoring takes up to a minute.</p>}
+            <DocRow label="Cover letter" ok={job.letter} warnings={job.warnings.letter} onView={() => open(`/api/pdf?kind=letter&job=${encodeURIComponent(job.id)}`)} onReview={() => open(`/jobs/${job.id}`)}>
+              {job.described && status.llm && (
+                <Button variant="secondary" size="sm" onClick={writeLetter} disabled={busy !== ""} className="w-full">
+                  {busy === "letter" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <PenLine className="h-3.5 w-3.5" />}
+                  {busy === "letter" ? "Writing…" : "Write cover letter"}
+                </Button>
+              )}
+            </DocRow>
+            {busy === "letter" && <p className="text-xs text-ink-3">Takes about half a minute.</p>}
           </>
         )}
         {note && <Notice tone="ok">{note}</Notice>}
@@ -402,12 +411,37 @@ function JobSection({
   );
 }
 
-function DocChip({ ok, label }: { ok: boolean; label: string }) {
+/** A tailored document: what it is, a link to its PDF and what to check before sending, or the button that makes it. */
+function DocRow({ label, ok, warnings, onView, onReview, children }: { label: string; ok: boolean; warnings: Warning[]; onView: () => void; onReview: () => void; children: ReactNode }) {
+  if (!ok) return children ? <div className="space-y-1.5">{children}</div> : null;
+  const shown = warnings.slice(0, 4);
   return (
-    <span className={cx("inline-flex h-6 items-center gap-1 rounded-chip border px-2 text-xs", ok ? "border-ok bg-ok-soft text-ok" : "border-rule bg-paper text-ink-3")}>
-      {ok ? <Check className="h-3 w-3" /> : <FileText className="h-3 w-3" />}
-      {label}
-    </span>
+    <div className="space-y-1.5">
+      <div className="flex items-center gap-2">
+        <span className="inline-flex h-6 items-center gap-1 rounded-chip border border-ok bg-ok-soft px-2 text-xs text-ok">
+          <Check className="h-3 w-3" />
+          {label}
+        </span>
+        <span className="text-xs text-ink-3">{warnings.length ? `${warnings.length} to check` : "Nothing flagged"}</span>
+        <button onClick={onView} className="ml-auto inline-flex items-center gap-1 text-xs text-brand underline-offset-2 hover:underline">
+          <FileText className="h-3 w-3" /> View PDF
+        </button>
+      </div>
+      {shown.length > 0 && (
+        <Notice tone="warn">
+          <ul className="space-y-1">
+            {shown.map((w, i) => (
+              <li key={i}>
+                <span className="font-medium text-ink">{w.where}</span>: {w.message}
+              </li>
+            ))}
+          </ul>
+          <button onClick={onReview} className="mt-1.5 text-brand underline-offset-2 hover:underline">
+            {warnings.length > shown.length ? `${warnings.length - shown.length} more on the job page` : "Fix on the job page"}
+          </button>
+        </Notice>
+      )}
+    </div>
   );
 }
 

@@ -149,7 +149,7 @@ export function Sidebar({ llm }: { llm: { provider: string; model: string } | nu
             ) : (
               <>
                 <div className="font-semibold text-ink">AI not connected</div>
-                <div className="text-ink-3">Add a key to v2/.env.local</div>
+                <div className="text-ink-3">Add an API key in Settings</div>
               </>
             )}
           </div>

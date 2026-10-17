@@ -8,6 +8,7 @@ import { SegmentedLinks } from "@/components/segmented-links";
 import { getProfile, listJobs } from "@/lib/db";
 import { ago } from "@/lib/format";
 import { llmConfigured } from "@/lib/llm";
+import { settingsHref } from "@/lib/settings-sections";
 import { JOB_STATUSES, type Job } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -93,8 +94,7 @@ function SetupCard({ profileEmpty, llm }: { profileEmpty: boolean; llm: boolean 
       done: llm,
       body: (
         <>
-          Connect AI: set <code className="font-mono text-xs">NEBIUS_API_KEY</code>, <code className="font-mono text-xs">ANTHROPIC_API_KEY</code> or{" "}
-          <code className="font-mono text-xs">OPENAI_API_KEY</code> in <code className="font-mono text-xs">v2/.env.local</code>. Manual editing and PDFs work without it.
+          <Link href={settingsHref("ai")} className="font-medium text-brand underline-offset-2 hover:underline">Connect AI</Link>: paste an Anthropic, Nebius or OpenAI API key in Settings. Manual editing and PDFs work without it.
         </>
       ),
     },

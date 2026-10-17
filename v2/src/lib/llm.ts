@@ -1,11 +1,12 @@
 import { z } from "zod";
 
-import { getSettings } from "./db";
+import { getKv, getSettings, setKv } from "./db";
 import { PROVIDERS, type AiSettings, type Provider } from "./types";
 
 /**
- * Minimal provider-agnostic LLM client. Settings choose the provider and model;
- * API keys only ever come from the environment (v2/.env.local).
+ * Minimal provider-agnostic LLM client. Settings choose the provider and model.
+ * API keys come from the environment (v2/.env.local) or Settings (stored in the database, never sent
+ * to the browser); an environment variable wins when both are set.
  */
 
 const PROVIDER_INFO: Record<Provider, { label: string; keyEnv: string; modelEnv: string; defaultModel: string; baseEnv?: string; defaultBase: string }> = {
@@ -15,6 +16,27 @@ const PROVIDER_INFO: Record<Provider, { label: string; keyEnv: string; modelEnv:
 };
 
 type Env = Record<string, string | undefined>;
+
+const KEY_KV = (p: Provider) => `apiKey:${p}`;
+
+/** Keys entered in Settings. */
+export function storedKeys(): Partial<Record<Provider, string>> {
+  return Object.fromEntries(PROVIDERS.map((p) => [p, getKv(KEY_KV(p)) ?? ""]).filter(([, k]) => k));
+}
+
+/** "" removes the key. */
+export function saveKey(provider: Provider, key: string) {
+  setKv(KEY_KV(provider), key.trim());
+}
+
+/** The environment with keys from Settings filled in where it has none. */
+export function withStoredKeys(env: Env, stored: Partial<Record<Provider, string>>): Env {
+  const out = { ...env };
+  for (const p of PROVIDERS) if (!out[PROVIDER_INFO[p].keyEnv]?.trim() && stored[p]?.trim()) out[PROVIDER_INFO[p].keyEnv] = stored[p];
+  return out;
+}
+
+const keyEnv = () => withStoredKeys(process.env, storedKeys());
 
 export interface LlmConfig {
   provider: Provider;
@@ -29,20 +51,27 @@ export interface ProviderStatus {
   label: string;
   hasKey: boolean;
   keyEnv: string;
+  /** Where the key comes from: the environment wins over Settings. */
+  keySource: "env" | "settings" | null;
+  /** The key's last 4 characters, so you can tell which one it is. */
+  keyHint: string;
   /** What "" in settings falls back to. */
   defaultModel: string;
   defaultBase: string;
 }
 
 /** Every provider, whether it has a key, and what its blank settings fall back to. */
-export function providerStatus(env: Env = process.env): ProviderStatus[] {
+export function providerStatus(env: Env = keyEnv(), raw: Env = process.env): ProviderStatus[] {
   return PROVIDERS.map((p) => {
     const i = PROVIDER_INFO[p];
+    const key = env[i.keyEnv]?.trim() ?? "";
     return {
       provider: p,
       label: i.label,
-      hasKey: !!env[i.keyEnv]?.trim(),
+      hasKey: !!key,
       keyEnv: i.keyEnv,
+      keySource: !key ? null : raw[i.keyEnv]?.trim() ? "env" : "settings",
+      keyHint: key.length > 8 ? key.slice(-4) : "",
       defaultModel: env[i.modelEnv]?.trim() || i.defaultModel,
       defaultBase: (i.baseEnv && env[i.baseEnv]?.trim()) || i.defaultBase,
     };
@@ -53,11 +82,11 @@ export function providerStatus(env: Env = process.env): ProviderStatus[] {
  * The provider to call: the chosen one if it has a key, else the first with a key
  * (Anthropic → Nebius → OpenAI), with a warning saying why the choice was skipped.
  */
-export function resolveLlm(ai: AiSettings, env: Env = process.env): { config: LlmConfig | null; warning: string | null } {
+export function resolveLlm(ai: AiSettings, env: Env = keyEnv()): { config: LlmConfig | null; warning: string | null } {
   const status = providerStatus(env);
   const chosen = ai.provider ? status.find((s) => s.provider === ai.provider)! : null;
   const pick = chosen?.hasKey ? chosen : status.find((s) => s.hasKey);
-  const warning = chosen && !chosen.hasKey ? `${chosen.label} is selected but ${chosen.keyEnv} isn't set${pick ? `, so ${pick.label} is used instead` : ""}.` : null;
+  const warning = chosen && !chosen.hasKey ? `${chosen.label} is selected but has no API key${pick ? `, so ${pick.label} is used instead` : ""}.` : null;
   if (!pick) return { config: null, warning };
   const p = pick.provider;
   const base = p === "openai" && ai.openaiBaseUrl.trim() ? ai.openaiBaseUrl.trim() : pick.defaultBase;
@@ -91,7 +120,7 @@ async function providerError(provider: string, res: Response): Promise<Error> {
   } catch {}
   const hint =
     res.status === 401 || res.status === 403
-      ? " Check the API key in v2/.env.local."
+      ? " Check the API key in Settings → AI model."
       : res.status === 429
         ? " Rate limited or out of credits."
         : res.status === 404 || /model/i.test(String(msg))
@@ -142,7 +171,7 @@ function extractJSON(text: string): unknown {
 
 /** Ask for JSON matching `schema`; retries once, feeding the validation error back. */
 export async function generateJSON<T extends z.ZodTypeAny>(schema: T, system: string, user: string, config: LlmConfig | null = current()): Promise<z.infer<T>> {
-  if (!config) throw new Error("No AI provider configured. Set ANTHROPIC_API_KEY, NEBIUS_API_KEY or OPENAI_API_KEY in v2/.env.local.");
+  if (!config) throw new Error("No AI provider configured. Add an API key in Settings → AI model.");
   const sys = `${system}\n\nRespond with a single JSON object and nothing else.`;
   let prompt = user;
   for (let attempt = 0; attempt < 2; attempt++) {
@@ -166,7 +195,7 @@ export async function generateJSON<T extends z.ZodTypeAny>(schema: T, system: st
 /** Send a tiny request with these (possibly unsaved) settings. */
 export async function testLlm(ai: AiSettings): Promise<{ provider: string; model: string; ms: number }> {
   const { config, warning } = resolveLlm(ai);
-  if (!config) throw new Error(warning ?? "No AI provider has a key. Add one to v2/.env.local.");
+  if (!config) throw new Error(warning ?? "No AI provider has a key. Add one in Settings → AI model.");
   const t = Date.now();
   await generateJSON(z.object({ ok: z.literal(true) }), 'Connection check. Reply with exactly {"ok": true}.', "ping", config);
   return { provider: config.label, model: config.model, ms: Date.now() - t };

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { createJob, editedMeta, getDoc, getSettings, migrate, saveDoc, saveSettings } from "../db";
-import { resolveLlm } from "../llm";
+import { providerStatus, resolveLlm, withStoredKeys } from "../llm";
 import { profileAsTailored, resolveResume } from "../resolve";
 import { letterSystem, letterWarnings } from "../tailor";
 import { Settings } from "../types";
@@ -28,7 +28,7 @@ describe("resolveLlm", () => {
   it("falls back with a warning when the chosen provider has no key", () => {
     const r = resolveLlm(ai({ provider: "anthropic" }), { NEBIUS_API_KEY: "n" });
     expect(r.config?.provider).toBe("nebius");
-    expect(r.warning).toMatch(/ANTHROPIC_API_KEY.*Nebius is used instead/);
+    expect(r.warning).toMatch(/Anthropic is selected but has no API key, so Nebius is used instead/);
   });
 
   it("model: settings, then env, then the built-in default", () => {
@@ -44,6 +44,15 @@ describe("resolveLlm", () => {
 
   it("ignores a blank key", () => {
     expect(resolveLlm(ai(), { ANTHROPIC_API_KEY: "  " }).config).toBeNull();
+  });
+
+  it("keys from Settings fill in where the environment has none, and the environment wins", () => {
+    const env = withStoredKeys({ ANTHROPIC_API_KEY: "from-env", NEBIUS_API_KEY: " " }, { anthropic: "from-settings", nebius: "neb-settings-key" });
+    expect(resolveLlm(ai(), env).config?.key).toBe("from-env");
+    expect(resolveLlm(ai({ provider: "nebius" }), env).config?.key).toBe("neb-settings-key");
+    const status = providerStatus(env, { ANTHROPIC_API_KEY: "from-env" });
+    expect(status.map((s) => s.keySource)).toEqual(["env", "settings", null]);
+    expect(status[1].keyHint).toBe("-key");
   });
 });
 

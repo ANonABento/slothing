@@ -22,12 +22,12 @@ Single user, local SQLite, no auth.
 cd v2
 npm install
 npm run engines            # downloads typst and the resume fonts into .engines/
-cp .env.example .env.local # add NEBIUS_API_KEY, ANTHROPIC_API_KEY or OPENAI_API_KEY
-npm run dev                # http://localhost:3000
+npm run dev                # http://localhost:3000, then paste an AI key in Settings → AI model
 npm run v1                 # optional: the archived v1 app on http://localhost:3100, for comparison
 ```
 
-Data lives in `v2/data/slothing.db` (override with `SLOTHING_DATA_DIR`).
+Data lives in `v2/data/slothing.db` (override with `SLOTHING_DATA_DIR`), and so do keys entered in Settings.
+Keys can also come from the environment (`cp .env.example .env.local`), which wins when both are set.
 
 ### Browser extension (Chrome)
 
@@ -49,8 +49,7 @@ websites can't read the API). Turn off recording on the Extension page.
 
 ```bash
 cd v2
-cp .env.example .env.local   # your own AI key(s)
-docker compose up --build    # http://localhost:3000
+docker compose up --build    # http://localhost:3000, then paste an AI key in Settings → AI model
 ```
 
 Typst and the fonts are baked into the image. Your data is `v2/data/` on the host (mounted at `/data`),

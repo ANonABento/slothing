@@ -1,5 +1,5 @@
 # Your data lives in ./data next to this file (the same folder `npm run dev` uses), so you can
-# switch between Docker and a local checkout. Keys: put them in .env.local (see .env.example).
+# switch between Docker and a local checkout. Keys: paste them in Settings, or put them in .env.local (see .env.example).
 services:
   slothing:
     build: .
