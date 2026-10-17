@@ -148,6 +148,13 @@ describe("letterWarnings", () => {
     expect(letterWarnings(profile, letter("I want to work on your Kubernetes platform."), job)).toEqual([]);
   });
 
+  it("wanting to learn something isn't claiming it; bringing it still is", () => {
+    const job = { title: "Platform Engineer", company: "Globex", description: "Kubernetes, Kubernetes, Kubernetes and GraphQL." };
+    expect(letterWarnings(profile, letter("While my experience is in TypeScript, I am eager to apply it to Kubernetes."), job)).toEqual([]);
+    expect(letterWarnings(profile, letter("I am new to Kubernetes but learn quickly."), job)).toEqual([]);
+    expect(letterWarnings(profile, letter("I am excited to bring my Kubernetes experience."), job)[0]?.message).toMatch(/Kubernetes/);
+  });
+
   it("doesn't let the posting vouch for experience, but allows its years", () => {
     const job = { title: "Intern", company: "Initech", description: "Winter 2027 term. 5+ years experience required." };
     const w = letterWarnings(profile, letter("I have 5+ years of experience and am excited for the Winter 2027 term."), job);

@@ -388,6 +388,11 @@ export async function writeCoverLetter(
   return { doc, warnings: letterWarnings(profile, doc, job, letter.length) };
 }
 
+// A sentence about wanting to learn something isn't a claim to have it ("eager to apply my backend
+// fundamentals to Ruby", "new to GraphQL"). "Excited to bring my Ruby experience" still is.
+const LEARNING =
+  /\b(eager|excited|keen|looking forward|hoping|hope|want|would (love|like))\s+to\s+(learn|apply|grow|develop|deepen|build on|pick up|get better|ramp up)\b|\b(learning|new to|not yet|haven't (yet )?(used|worked)|have not (yet )?(used|worked)|ramp(ing)? up on)\b/i;
+
 /**
  * Numbers in a letter must come from the profile. The posting only vouches for years ("Winter 2027 term"):
  * a "5+ years" in the requirements isn't the candidate's. A number the letter quotes from the posting is
@@ -399,7 +404,7 @@ export function letterWarnings(profile: Profile, doc: CoverLetter, job?: Pick<Jo
   const facts = `${profileFacts(profile)}\n${postingYears.join(" ")}`;
   const company = job?.company.trim().toLowerCase();
   const aboutMe = (sentence: string) =>
-    /\b(I|I'm|I've|I'd|my|me)\b/.test(sentence) && !/\b(you|your|you're)\b/i.test(sentence) && !(company && sentence.toLowerCase().includes(company));
+    /\b(I|I'm|I've|I'd|my|me)\b/.test(sentence) && !/\b(you|your|you're)\b/i.test(sentence) && !(company && sentence.toLowerCase().includes(company)) && !LEARNING.test(sentence);
   const warnings: Warning[] = doc.paragraphs.flatMap((p, i) => {
     const where = `Paragraph ${i + 1}`;
     const out: Warning[] = [];

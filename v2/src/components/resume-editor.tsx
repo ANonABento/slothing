@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useState, useTransition } from "react";
 
 import { rewordBulletAction, saveResumeAction, tailorResumeAction } from "@/app/actions";
+import { fitOf } from "@/lib/gap";
 import type { Rewording } from "@/lib/tailor";
 import type { Job, Profile, TailoredResume, Warning } from "@/lib/types";
 import { CommaInput } from "./comma-input";
@@ -18,7 +19,7 @@ import { EntryCard, count, dates, joinParts } from "./entry-card";
 import { KeywordGap } from "./keyword-gap";
 import { RowMenu } from "./row-menu";
 import { SaveBar } from "./save-bar";
-import { Button, IconButton, Input, Label, Textarea, Warnings, buttonClass } from "./ui";
+import { Button, FitChip, IconButton, Input, Label, Textarea, Warnings, buttonClass } from "./ui";
 
 type Entry = TailoredResume["experience"][number];
 type Bullet = Entry["bullets"][number];
@@ -321,8 +322,11 @@ export function ResumeEditor({
   );
 
   if (!doc) {
+    // Before tailoring, the question is whether it's worth it: how much of the posting your profile covers.
+    const fit = fitOf(profile, job);
     return (
       <div className="space-y-3">
+        {fit && <FitChip fit={fit} detail />}
         <p className="text-sm text-ink-2">
           No resume for this job yet. AI tailoring picks and rephrases from your profile. Every bullet stays linked to the one it
           came from, and anything it can&apos;t trace back is removed or flagged.

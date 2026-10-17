@@ -121,8 +121,8 @@ it doesn't (`hasTerm` / `spelledAs` over the whole profile, hidden items include
   evidence; Jobscan's and Jobright's percentages look more precise than a term count is): "Strong fit · 14 of 18 key terms", "Partial",
   "Weak", plus up to 3 missing terms ("Missing: Kubernetes, Terraform"). The missing side is the
   noisiest (leftover boilerplate, place names), so a percentage would look more exact than it is.
-  Bands (strong ≥ 55% of key terms, partial ≥ 30%) were tuned on only 4 saved postings: retune after
-  real use. Calibrating also dropped words nobody can act on from key terms (internship, co-op, summer,
+  Bands (strong ≥ 50% of key terms, partial ≥ 25%; words match in any form, so "engineering" counts
+  for "engineer") were tuned on 6 postings across two profiles: retune after real use. Calibrating also dropped words nobody can act on from key terms (internship, co-op, summer,
   student, USA, NYC, "e.g."), which cleans up the keyword gap too.
 - **`gap.ts`:** `fitOf(profile, job)` returns `{ band, have, total, missing[] }`, or `null` without a
   description (LinkedIn seen in passing). Pure and unit-tested. Computed when shown, never stored, so it

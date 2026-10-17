@@ -320,6 +320,9 @@ export function addSource(doc: TailoredResume, src: GapSource): TailoredResume {
 
 export type FitBand = "strong" | "partial" | "weak";
 
+/** A word's first six letters: enough to join "development" and "developer", short words stay whole. */
+const root = (w: string) => (w.length >= 6 ? w.slice(0, 6) : w);
+
 export interface Fit {
   band: FitBand;
   /** Key terms of the posting your profile has, of `total`. */
@@ -330,9 +333,11 @@ export interface Fit {
 }
 
 // Tuned on real postings against real profiles (see ROADMAP "C. Fit score"). The missing side carries the
-// noise (boilerplate, places), so a strong fit rarely reaches 100%.
-const STRONG = 0.55;
-const PARTIAL = 0.3;
+// noise (boilerplate, the company's own product names), so even a good fit rarely passes 60%: a backend
+// engineer on a backend posting scored 25–30% (dogfood, 2026-10-17), hardware roles for a software
+// profile 5–15%.
+const STRONG = 0.5;
+const PARTIAL = 0.25;
 // Fewer key terms than this (a stub description) says too little to score.
 const MIN_TERMS = 6;
 
@@ -346,7 +351,11 @@ export function fitOf(profile: Profile, job: Pick<Job, "title" | "description" |
   if (!text.trim()) return null;
   const key = keyTerms(job, profile.skills.flatMap((g) => g.items));
   if (key.length < MIN_TERMS) return null;
-  const missing = key.filter((t) => !hasTerm(text, t.term) && !spelledAs(text, t));
+  // A score, not a check: a word counts in any form ("reliability" for "reliable", "engineering" for
+  // "engineer"), by its first letters. The keyword gap and grounding stay exact.
+  const roots = new Set(terms(text).map(root));
+  const loosely = (t: KeyTerm) => t.term.split(" ").every((w) => roots.has(root(w)));
+  const missing = key.filter((t) => !hasTerm(text, t.term) && !spelledAs(text, t) && !loosely(t));
   const have = key.length - missing.length;
   const ratio = have / key.length;
   return { band: ratio >= STRONG ? "strong" : ratio >= PARTIAL ? "partial" : "weak", have, total: key.length, missing: missing.slice(0, 3).map((t) => t.label) };
