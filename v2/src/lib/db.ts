@@ -27,9 +27,10 @@ if (process.env.VITEST && !process.env.SLOTHING_DATA_DIR) {
 function open() {
   mkdirSync(DATA_DIR, { recursive: true });
   const db = new Database(join(DATA_DIR, "slothing.db"));
-  db.pragma("journal_mode = WAL");
   // Wait for another writer (a second process, or parallel test files) instead of failing at once.
+  // First, so switching to WAL below waits too.
   db.pragma("busy_timeout = 5000");
+  db.pragma("journal_mode = WAL");
   db.exec(`
     CREATE TABLE IF NOT EXISTS profile (
       id INTEGER PRIMARY KEY CHECK (id = 1),
@@ -114,8 +115,16 @@ function createVersions(db: Database.Database) {
   `);
 }
 
-/** Columns added after a table first shipped. CREATE TABLE above has them for new databases; this adds them to old ones. */
+/**
+ * Columns added after a table first shipped. CREATE TABLE above has them for new databases; this adds them to old ones.
+ * One write-locked transaction, so two processes opening the same database (parallel test files, a second dev
+ * server) can't both see a column missing and both add it.
+ */
 export function migrate(db: Database.Database) {
+  db.transaction(() => addColumns(db)).immediate();
+}
+
+function addColumns(db: Database.Database) {
   const has = (table: string, column: string) => (db.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[]).some((c) => c.name === column);
   if (!has("documents", "meta")) db.exec("ALTER TABLE documents ADD COLUMN meta TEXT NOT NULL DEFAULT '{}'");
   // Columns of a table that exists: has() is false for a missing table too, and ALTER would fail.
