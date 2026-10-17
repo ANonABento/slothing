@@ -25,13 +25,19 @@ const NOISE = new Set(
     // Filler that real postings repeat often enough to pass the count (checked against Greenhouse postings).
     "through feature product service software flow solution excited limit clear learn keep just point way show bring idea " +
     "shape grow real live high own existing specific important need one list case guidance creating stage core group term " +
+    "e.g i.e problem technical open " +
     // Capitalized like tools but never one: currencies, regions, legal, social links.
     "usd gbp eur cad aud inr sgd jpy chf eeo eeoc gdp emea amer apac latam kpi okr faq linkedin youtube instagram twitter facebook tiktok glassdoor"
   ).split(" "),
 );
 
-// Seniority can't be acted on, so it's never a key term, not even in the title.
-const SENIORITY = new Set("senior sr junior jr intern principal staff associate ii iii iv".split(" "));
+// Seniority, the kind of position and where it is can't be acted on, so they're never key terms, not even in the title.
+const SENIORITY = new Set(
+  (
+    "senior sr junior jr intern internship principal staff associate ii iii iv " +
+    "co op coop student summer fall spring winter graduate grad usa u.s nyc"
+  ).split(" "),
+);
 
 // Sentences every posting carries that aren't about the work: EEO, accommodations, scam warnings. A legal
 // footnote (trademarks) goes as a whole paragraph, since only one of its sentences says so.
@@ -310,4 +316,38 @@ export function addSource(doc: TailoredResume, src: GapSource): TailoredResume {
       ? list.map((e) => (e === entry ? { ...e, bullets: [...e.bullets, bullet] } : e))
       : [...list, { sourceId: src.entryId, bullets: [bullet] }],
   };
+}
+
+export type FitBand = "strong" | "partial" | "weak";
+
+export interface Fit {
+  band: FitBand;
+  /** Key terms of the posting your profile has, of `total`. */
+  have: number;
+  total: number;
+  /** The most important ones it doesn't, as the posting writes them. */
+  missing: string[];
+}
+
+// Tuned on real postings against real profiles (see ROADMAP "C. Fit score"). The missing side carries the
+// noise (boilerplate, places), so a strong fit rarely reaches 100%.
+const STRONG = 0.55;
+const PARTIAL = 0.3;
+// Fewer key terms than this (a stub description) says too little to score.
+const MIN_TERMS = 6;
+
+/**
+ * How much of a posting your profile covers, no AI: its key terms (as the keyword gap finds them) that
+ * appear anywhere in your profile, hidden items included. Null without a description or a profile.
+ */
+export function fitOf(profile: Profile, job: Pick<Job, "title" | "description" | "company">): Fit | null {
+  if (!job.description.trim()) return null;
+  const text = profileText(profile);
+  if (!text.trim()) return null;
+  const key = keyTerms(job, profile.skills.flatMap((g) => g.items));
+  if (key.length < MIN_TERMS) return null;
+  const missing = key.filter((t) => !hasTerm(text, t.term) && !spelledAs(text, t));
+  const have = key.length - missing.length;
+  const ratio = have / key.length;
+  return { band: ratio >= STRONG ? "strong" : ratio >= PARTIAL ? "partial" : "weak", have, total: key.length, missing: missing.slice(0, 3).map((t) => t.label) };
 }

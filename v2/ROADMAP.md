@@ -91,7 +91,7 @@ Kevin chose to build it now (2026-10-17).
    count as `npm run dev`, a key saved in Settings survives a container restart, and the Extension
    page connects. Fix what breaks. Keep the README's Docker section only if it passes.
 
-### B. Local models (Ollama, LM Studio)
+### B. Local models (Ollama, LM Studio) — done 2026-10-17
 
 Today a local endpoint can't be used: `resolveLlm` only picks a provider with a key, and Ollama has
 none. Ollama is running on this Mac (`qwen3.5:4b`), so this can be tested for real.
@@ -106,12 +106,12 @@ none. Ollama is running on this Mac (`qwen3.5:4b`), so this can be tested for re
 - **Settings:** under the endpoint field, "Ollama: http://localhost:11434/v1 · LM Studio:
   http://localhost:1234/v1 · no key needed". README: from Docker, use `host.docker.internal`.
 - **Tests:** a local endpoint with no key resolves; a remote endpoint with no key doesn't; the JSON-mode retry.
-- **Check:** with `qwen3.5:4b`, import a resume, tailor one job, write one letter. Log time and
-  grounding warnings in `FRICTION.md`. A small model is expected to be weaker, and grounding is what
-  keeps it honest. If it can't import at all, say so in Settings instead of shipping a trap.
+- **Checked** with `qwen3.5:4b` on a copy of the data: import, AI tailoring and a letter all worked
+  (the letter took ~2.5 min). Grounding dropped one made-up bullet and flagged three uses of the
+  posting's "systems". A blank model uses the first one the server lists; `<think>` blocks are stripped.
 - ~60 lines. No new settings, no model downloads from the app.
 
-### C. Fit score on postings (no AI)
+### C. Fit score on postings (no AI) — done 2026-10-17
 
 Answers "is this worth applying to?" before you save or tailor. It reuses the keyword gap's
 machinery: the posting's key terms (`keyTerms`), split into the ones your profile has and the ones
@@ -121,7 +121,9 @@ it doesn't (`hasTerm` / `spelledAs` over the whole profile, hidden items include
   evidence; Jobscan's and Jobright's percentages look more precise than a term count is): "Strong fit · 14 of 18 key terms", "Partial",
   "Weak", plus up to 3 missing terms ("Missing: Kubernetes, Terraform"). The missing side is the
   noisiest (leftover boilerplate, place names), so a percentage would look more exact than it is.
-  Bands are tuned on the 15 Greenhouse postings from the 2026-10-17 dogfood, then on real ones.
+  Bands (strong ≥ 55% of key terms, partial ≥ 30%) were tuned on only 4 saved postings: retune after
+  real use. Calibrating also dropped words nobody can act on from key terms (internship, co-op, summer,
+  student, USA, NYC, "e.g."), which cleans up the keyword gap too.
 - **`gap.ts`:** `fitOf(profile, job)` returns `{ band, have, total, missing[] }`, or `null` without a
   description (LinkedIn seen in passing). Pure and unit-tested. Computed when shown, never stored, so it
   never goes stale when the profile changes. Hundreds of jobs are fine; the profile text is built once.

@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import { createRoot } from "react-dom/client";
 
 import { Dropdown } from "@/components/dropdown";
-import { Button, Eyebrow, Input, buttonClass, cx } from "@/components/ui";
+import { Button, Eyebrow, FitChip, Input, buttonClass, cx } from "@/components/ui";
 import type { AnswerProposal, Fill, FormField, Skip } from "@/lib/autofill";
 import type { JobSummary } from "@/lib/extension";
 import type { Warning } from "@/lib/types";
@@ -336,6 +336,7 @@ function JobSection({
           </div>
           <Button size="sm" variant="secondary" onClick={() => open(`/jobs/${job.id}`)}>Open</Button>
         </div>
+        {job.fit && <FitChip fit={job.fit} detail />}
         {seen ? (
           <>
             <Button variant="primary" onClick={save} disabled={busy !== ""} className="w-full">

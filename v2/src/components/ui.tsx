@@ -179,6 +179,27 @@ export function StatusPill({ status }: { status: string }) {
   );
 }
 
+const FIT = {
+  strong: { label: "Strong fit", tone: "border-ok bg-ok-soft text-ok" },
+  partial: { label: "Partial fit", tone: "border-rule-strong bg-paper text-ink-2" },
+  weak: { label: "Weak fit", tone: "border-rule bg-transparent text-ink-3" },
+} as const;
+
+/** How much of a posting your profile covers (`fitOf`): the band, with the counts and missing terms on hover or beside it. */
+export function FitChip({ fit, detail = false, className }: { fit: { band: keyof typeof FIT; have: number; total: number; missing: string[] }; detail?: boolean; className?: string }) {
+  const counts = `${fit.have} of ${fit.total} key terms in your profile`;
+  const missing = fit.missing.length ? `Missing: ${fit.missing.join(", ")}` : "";
+  return (
+    <span className={cx("inline-flex min-w-0 items-center gap-2", className)} title={detail ? undefined : [counts, missing].filter(Boolean).join(" · ")}>
+      <span className={cx("inline-flex h-6 shrink-0 items-center rounded-chip border px-2 text-xs font-medium", FIT[fit.band].tone)}>
+        {FIT[fit.band].label}
+        <span className="ml-1.5 font-mono font-normal opacity-80">{fit.have}/{fit.total}</span>
+      </span>
+      {detail && missing && <span className="truncate text-xs text-ink-3">{missing}</span>}
+    </span>
+  );
+}
+
 export function Warnings({ items }: { items: { where: string; message: string }[] }) {
   if (!items.length) return null;
   return (

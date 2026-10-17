@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { addSource, hasTerm, keyTerms, keywordGap, spelledAs } from "../gap";
+import { addSource, fitOf, hasTerm, keyTerms, keywordGap, spelledAs } from "../gap";
 import { profileAsTailored } from "../resolve";
 import type { TailoredResume } from "../types";
 import { profile } from "./fixture";
@@ -121,5 +121,37 @@ describe("keywordGap", () => {
     if (st?.kind !== "profile") throw new Error("expected a profile term");
     expect(st.sources).toEqual([{ type: "skill", category: "Languages", skill: "SQL" }]);
     expect(addSource(empty, st.sources[0]).skills).toEqual([{ category: "Languages", items: ["SQL"] }]);
+  });
+});
+
+describe("fitOf", () => {
+  const posting = (title: string, description: string) => ({ company: "Initech", title, description });
+
+  it("counts the posting's key terms your profile has, and names the ones it doesn't", () => {
+    const fit = fitOf(profile, posting(
+      "Software Engineer",
+      `You'll work in TypeScript, GraphQL, Postgres, Rust and Kafka. Own CI pipelines, CI speed and CI cost.
+      Build billing for payments: billing APIs, billing reports and payments retries. Payments matter here.`,
+    ))!;
+    expect(fit.total).toBeGreaterThanOrEqual(6);
+    expect(fit.have).toBeGreaterThan(fit.total / 2);
+    expect(fit.band).toBe("strong");
+    expect(fit.missing).toEqual(expect.arrayContaining(["Rust"]));
+  });
+
+  it("is weak for a posting in another field", () => {
+    const fit = fitOf(profile, posting("Registered Nurse", "ICU nursing. Patient care, patient safety and patient charting. Telemetry, ventilators, BLS and ACLS. Night shifts in the ICU."))!;
+    expect(fit.band).toBe("weak");
+  });
+
+  it("ignores the kind of position: an internship isn't missing experience", () => {
+    const fit = fitOf(profile, posting("Software Engineer Intern, Summer 2027 (Co-op)", "TypeScript, GraphQL, Postgres, CI and billing. CI CI CI."))!;
+    expect(fit.missing.map((m) => m.toLowerCase())).not.toEqual(expect.arrayContaining(["intern"]));
+    expect(fit.missing.map((m) => m.toLowerCase())).not.toEqual(expect.arrayContaining(["summer"]));
+  });
+
+  it("says nothing without a description or with too little to go on", () => {
+    expect(fitOf(profile, posting("Software Engineer", ""))).toBeNull();
+    expect(fitOf(profile, posting("Engineer", "Apply now."))).toBeNull();
   });
 });

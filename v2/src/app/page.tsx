@@ -3,10 +3,11 @@ import Link from "next/link";
 
 import { AddJob } from "@/components/add-job";
 import { PageBody, PageHeader } from "@/components/page-header";
-import { Card, EmptyState, Eyebrow, StatusPill, cx } from "@/components/ui";
+import { Card, EmptyState, Eyebrow, FitChip, StatusPill, cx } from "@/components/ui";
 import { SegmentedLinks } from "@/components/segmented-links";
 import { getProfile, listJobs } from "@/lib/db";
 import { ago } from "@/lib/format";
+import { fitOf, type Fit } from "@/lib/gap";
 import { llmConfigured } from "@/lib/llm";
 import { settingsHref } from "@/lib/settings-sections";
 import { JOB_STATUSES, type Job } from "@/lib/types";
@@ -25,14 +26,22 @@ const isClosed = (j: Job) => j.status === "rejected" || j.status === "archived";
 const inView = (j: Job, view: View) =>
   view === "all" ? true : view === "seen" ? j.status === "seen" : view === "closed" ? isClosed(j) : j.status !== "seen" && !isClosed(j);
 
-export default async function JobsPage({ searchParams }: { searchParams: Promise<{ view?: string }> }) {
-  const requested = (await searchParams).view;
+export default async function JobsPage({ searchParams }: { searchParams: Promise<{ view?: string; sort?: string }> }) {
+  const { view: requested, sort } = await searchParams;
   const view: View = VIEWS.find((v) => v.value === requested)?.value ?? "active";
   const jobs = listJobs();
   // Seen: postings you opened, most recent first, so it reads like browser history.
   const shown = jobs.filter((j) => inView(j, view));
-  if (view === "seen") shown.sort((a, b) => (b.lastSeenAt ?? b.createdAt).localeCompare(a.lastSeenAt ?? a.createdAt));
   const profile = getProfile();
+  // Computed, not stored, so it follows your profile. Closed jobs don't need one.
+  const fits = new Map<string, Fit | null>(shown.filter((j) => !isClosed(j)).map((j) => [j.id, fitOf(profile, j)]));
+  const byFit = view === "seen" && sort === "fit";
+  const score = (id: string) => {
+    const f = fits.get(id);
+    return f ? f.have / f.total : -1;
+  };
+  if (byFit) shown.sort((a, b) => score(b.id) - score(a.id));
+  else if (view === "seen") shown.sort((a, b) => (b.lastSeenAt ?? b.createdAt).localeCompare(a.lastSeenAt ?? a.createdAt));
   const profileEmpty = !profile.experience.length && !profile.projects.length;
   const counts = JOB_STATUSES.map((s) => [s, jobs.filter((j) => j.status === s).length] as const).filter(([, n]) => n);
 
@@ -49,7 +58,19 @@ export default async function JobsPage({ searchParams }: { searchParams: Promise
           {(profileEmpty || !llmConfigured()) && <SetupCard profileEmpty={profileEmpty} llm={llmConfigured()} />}
 
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <SegmentedLinks value={view} options={VIEWS.map((v) => ({ ...v, href: v.value === "active" ? "/" : `/?view=${v.value}` }))} />
+            <div className="flex flex-wrap items-center gap-3">
+              <SegmentedLinks value={view} options={VIEWS.map((v) => ({ ...v, href: v.value === "active" ? "/" : `/?view=${v.value}` }))} />
+              {view === "seen" && (
+                <SegmentedLinks
+                  size="sm"
+                  value={byFit ? "fit" : "recent"}
+                  options={[
+                    { value: "recent", label: "Recent", href: "/?view=seen" },
+                    { value: "fit", label: "Best fit", href: "/?view=seen&sort=fit" },
+                  ]}
+                />
+              )}
+            </div>
             {counts.length > 0 && <p className="text-sm text-ink-2">{counts.map(([s, n]) => `${n} ${s}`).join(" · ")}</p>}
           </div>
 
@@ -73,6 +94,7 @@ export default async function JobsPage({ searchParams }: { searchParams: Promise
                         {j.location && <span className="text-ink-3"> · {j.location}</span>}
                       </div>
                     </div>
+                    {fits.get(j.id) && <FitChip fit={fits.get(j.id)!} className="hidden md:inline-flex" />}
                     <StatusPill status={j.status} />
                     <div className="hidden w-24 text-right text-xs text-ink-3 sm:block">{j.status === "seen" && j.lastSeenAt ? ago(j.lastSeenAt) : ago(j.updatedAt)}</div>
                     <ChevronRight className="h-4 w-4 text-ink-3 transition-transform group-hover:translate-x-0.5" />

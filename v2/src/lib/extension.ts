@@ -6,6 +6,7 @@ import * as db from "./db";
 import { importJobFromPage, linkedInJobId, linkedInTitle, parsePostingUrl, postingKey } from "./job-import";
 import { llmConfigured } from "./llm";
 import { draftAnswers, type DraftAnswer } from "./tailor";
+import { fitOf, type Fit } from "./gap";
 import { tailorJob, writeLetter } from "./tailor-job";
 import type { Job, JobStatus, Warning } from "./types";
 
@@ -64,6 +65,8 @@ export interface JobSummary {
   status: JobStatus;
   resume: boolean;
   letter: boolean;
+  /** How much of the posting your profile covers; null without a description. */
+  fit: Fit | null;
   /** What to check before sending: the grounding checks and page length, as on the job page. */
   warnings: { resume: Warning[]; letter: Warning[] };
   /** Whether there's a description to tailor from (a LinkedIn posting seen in passing may not have one). */
@@ -83,6 +86,7 @@ function summary(j: Job): JobSummary {
     status: j.status,
     resume: Boolean(resume),
     letter: Boolean(letter),
+    fit: fitOf(db.getProfile(), j),
     warnings: { resume: resume?.warnings ?? [], letter: letter?.warnings ?? [] },
     described: Boolean(j.description.trim()),
     lastSeenAt: j.lastSeenAt,
