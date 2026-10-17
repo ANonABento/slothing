@@ -205,7 +205,10 @@ export function fill(input: unknown): { fills: Fill[]; skipped: Skip[] } {
   const { jobId, fields } = FillInput.parse(input);
   const job = jobId ? db.getJob(jobId) : null;
   const docs = { resume: Boolean(job && db.getDoc(job.id, "resume")), letter: Boolean(job && db.getDoc(job.id, "cover_letter")) };
-  const plan = planFill(fields, db.getProfile(), db.listAnswers(), docs);
+  // Companies of your other jobs, for answers written for one of them ("…at Lakeside…").
+  const mine = job?.company.trim().toLowerCase();
+  const others = [...new Set(db.listJobs().map((j) => j.company.trim()).filter((c) => c && c.toLowerCase() !== mine))];
+  const plan = planFill(fields, db.getProfile(), db.listAnswers(), docs, others);
   const used = [...new Set(plan.fills.flatMap((f) => (f.source === "bank" ? [f.answerId] : [])))];
   if (used.length) db.markAnswersUsed(used);
   return plan;

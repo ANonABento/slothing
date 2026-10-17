@@ -410,6 +410,7 @@ const SKIP_LABEL: Record<Skip["reason"], string> = {
   "no-document": "No PDF for this job yet",
   "has-value": "Already filled",
   upload: "Upload this yourself",
+  "other-company": "Your saved answer names another company",
 };
 
 function FormSection({
@@ -477,7 +478,7 @@ function FormSection({
     setBusy("");
   };
 
-  const unanswered = result?.skipped.filter((s) => s.reason === "no-answer" && s.label && (s.field.kind === "text" || s.field.kind === "textarea") && !drafts[s.id]) ?? [];
+  const unanswered = result?.skipped.filter((s) => (s.reason === "no-answer" || s.reason === "other-company") && s.label && (s.field.kind === "text" || s.field.kind === "textarea") && !drafts[s.id]) ?? [];
 
   const draft = async () => {
     setBusy("draft");
@@ -536,7 +537,7 @@ function FormSection({
                     <button onClick={() => revealField(tab, s.id)} className="flex w-full items-start gap-2 px-3 py-2 text-left hover:bg-rule-bg" title="Show this field on the page">
                       <span className="min-w-0 flex-1">
                         <span className="line-clamp-2 text-xs text-ink">{s.label || "Unlabelled field"}</span>
-                        <span className="text-[11px] text-ink-3">{drafts[s.id] === "none" ? "Your profile doesn't answer this" : SKIP_LABEL[s.reason]}</span>
+                        <span className="text-[11px] text-ink-3">{drafts[s.id] === "none" ? "Your profile doesn't answer this" : s.reason === "other-company" && s.company ? `Your saved answer names ${s.company}` : SKIP_LABEL[s.reason]}</span>
                       </span>
                       {s.reason === "no-document" && job && (
                         <span onClick={(e) => (e.stopPropagation(), open(`/jobs/${job.id}`))} className="shrink-0 text-[11px] text-brand hover:underline">Tailor</span>

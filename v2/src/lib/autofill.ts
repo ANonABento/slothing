@@ -146,7 +146,7 @@ export type Fill =
   | { id: string; source: "bank"; value: string; option?: number; answerId: string }
   | { id: string; source: "file"; doc: "resume" | "letter" };
 
-export type Skip = { id: string; reason: "has-value" | "no-answer" | "no-option" | "no-profile-value" | "no-document" | "upload" };
+export type Skip = { id: string; reason: "has-value" | "no-answer" | "no-option" | "no-profile-value" | "no-document" | "upload" | "other-company"; company?: string };
 
 export interface FillPlan {
   fills: Fill[];
@@ -155,11 +155,20 @@ export interface FillPlan {
 
 const CHOICE = new Set(["select", "radio"]);
 
+const escape = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+/** The first of `companies` an answer names ("…the patients at Lakeside…"), as a whole word. */
+export function namesCompany(answer: string, companies: string[]): string | undefined {
+  return companies.find((c) => c.trim().length >= 3 && new RegExp(`\\b${escape(c.trim())}\\b`, "i").test(answer));
+}
+
 /**
  * Decide every field. A field that already has a value is kept (you typed it, or a previous fill did).
  * `docs` says which tailored documents the job has, so file inputs are only claimed when there's a PDF.
+ * `otherCompanies`: your other jobs' companies. A saved answer that names one was written for that job,
+ * so it isn't pasted into this one.
  */
-export function planFill(fields: FormField[], profile: Profile, bank: Answer[], docs: { resume: boolean; letter: boolean }): FillPlan {
+export function planFill(fields: FormField[], profile: Profile, bank: Answer[], docs: { resume: boolean; letter: boolean }, otherCompanies: string[] = []): FillPlan {
   const plan: FillPlan = { fills: [], skipped: [] };
   for (const f of fields) {
     const role = classify(f);
@@ -187,6 +196,11 @@ export function planFill(fields: FormField[], profile: Profile, bank: Answer[], 
     }
     if (!value) {
       plan.skipped.push({ id: f.id, reason: role.type === "profile" ? "no-profile-value" : "no-answer" });
+      continue;
+    }
+    const other = answerId ? namesCompany(value, otherCompanies) : undefined;
+    if (other) {
+      plan.skipped.push({ id: f.id, reason: "other-company", company: other });
       continue;
     }
     let option: number | undefined;

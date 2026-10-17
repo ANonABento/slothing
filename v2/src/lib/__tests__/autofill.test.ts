@@ -113,6 +113,12 @@ describe("planFill", () => {
     const p = planFill([field("s", "Do you require sponsorship?", { kind: "select" })], profile, bank, { resume: false, letter: false });
     expect(p.fills).toEqual([{ id: "s", source: "bank", value: "No", option: undefined, answerId: "a4" }]);
   });
+  it("doesn't paste an answer written for another company", () => {
+    const b = [saved("w", "Why do you want to work in our ICU?", "The patients at Lakeside Health are who I know best.")];
+    const p = planFill([field("q", "Why do you want to work in our ICU?")], profile, b, { resume: false, letter: false }, ["Lakeside Health", "Acme"]);
+    expect(p.skipped).toEqual([{ id: "q", reason: "other-company", company: "Lakeside Health" }]);
+    expect(planFill([field("q", "Why do you want to work in our ICU?")], profile, b, { resume: false, letter: false }, ["Acme"]).fills).toHaveLength(1);
+  });
   it("leaves other uploads to you", () => {
     expect(planFill([field("t", "Transcript", { kind: "file" })], profile, bank, { resume: true, letter: true }).skipped).toEqual([{ id: "t", reason: "upload" }]);
   });
