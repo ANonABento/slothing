@@ -113,16 +113,24 @@ export function JobDocuments({
           {/* Both stay mounted so switching tabs never drops unsaved edits. */}
           <div hidden={tab !== "resume"}>
             <ResumeEditor
-              key={resume?.updatedAt ?? "none"}
               jobId={jobId}
               job={job}
               profile={profile}
               initial={resume?.data ?? null}
               initialWarnings={resume?.warnings ?? []}
+              version={resume?.updatedAt}
+              edited={resume?.meta.edited}
             />
           </div>
           <div hidden={tab !== "letter"}>
-            <LetterEditor key={letter?.updatedAt ?? "none"} jobId={jobId} initial={letter?.data ?? null} initialWarnings={letter?.warnings ?? []} targetWords={letterWords} />
+            <LetterEditor
+              key={letter?.updatedAt ?? "none"}
+              jobId={jobId}
+              initial={letter?.data ?? null}
+              initialWarnings={letter?.warnings ?? []}
+              edited={letter?.meta.edited}
+              targetWords={letterWords}
+            />
           </div>
         </Card>
         <PreviewPane>

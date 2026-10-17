@@ -19,9 +19,19 @@ export function terms(text: string): string[] {
   return (text.toLowerCase().match(/[a-z0-9][a-z0-9+#.]*[a-z0-9+#]|[a-z0-9]/g) ?? [])
     // Stop words before plurals, so "this" isn't kept as "thi".
     .filter((w) => !STOP.has(w) && !/^\d+$/.test(w))
-    // Plurals only on plain words, so "node.js" and "aws" survive.
-    .map((w) => (/^[a-z]{4,}$/.test(w) && w.endsWith("s") && !w.endsWith("ss") ? w.slice(0, -1) : w))
+    .map(singular)
     .filter((w) => !STOP.has(w));
+}
+
+/**
+ * Plurals only on plain words, so "node.js" and "aws" survive: "processes" → "process", "policies" →
+ * "policy", "sensors" → "sensor". Words that only look plural ("status", "analysis", "class") stay.
+ */
+function singular(w: string): string {
+  if (!/^[a-z]{4,}$/.test(w) || !w.endsWith("s") || /(ss|us|sis|xis)$/.test(w)) return w;
+  if (/(ss|sh|ch|x)es$/.test(w)) return w.slice(0, -2);
+  if (/[^aeiou]ies$/.test(w)) return `${w.slice(0, -3)}y`;
+  return w.slice(0, -1);
 }
 
 const grams = (ts: string[]) => {

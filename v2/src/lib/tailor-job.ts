@@ -19,9 +19,9 @@ export async function tailorJob(jobId: string, useAI: boolean) {
   const llm = llmInfo();
   const drafted = useAI ? await tailorResume(profile, job, tailoring) : { doc: profileAsTailored(profile), warnings: [] as Warning[] };
   const fitted = await fitResume(profile, job, drafted.doc, layout);
-  // Re-ground the fitted resume: number warnings for bullets the fitter dropped go away; drops the AI caused stay.
-  const { doc, warnings } = groundResume(profile, fitted.doc);
-  const all = [...drafted.warnings.filter((w) => w.kind !== "number"), ...warnings];
+  // Re-ground the fitted resume: checks on bullets the fitter dropped go away; drops the AI caused stay.
+  const { doc, warnings } = groundResume(profile, fitted.doc, job);
+  const all = [...drafted.warnings.filter((w) => !w.kind), ...warnings];
   if (fitted.overflow) all.unshift({ where: "Page length", message: `Your pinned items alone run past ${layout.pages === "two" ? "2 pages" : "1 page"}. Unpin something or change Page length in Settings.` });
   const meta: DocMeta = useAI ? { source: "ai", provider: llm?.provider, model: llm?.model, latitude: tailoring.latitude } : { source: "auto" };
   db.saveDoc(jobId, "resume", doc, all, meta);

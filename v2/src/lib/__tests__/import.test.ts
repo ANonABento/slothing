@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { reuseIds } from "../import";
+import { nameCase, reuseIds } from "../import";
 import { resolveResume } from "../resolve";
 import { Profile, type TailoredResume } from "../types";
 import { profile } from "./fixture";
@@ -39,5 +39,15 @@ describe("re-importing after the name/tools split", () => {
     const fresh = Profile.parse({ projects: [{ id: "prj_new", name: "Trailmap", tech: ["Python", "React"], bullets: [] }] });
     const merged = reuseIds(old, fresh);
     expect(merged.projects[0]).toMatchObject({ id: "prj_old", name: "Trailmap", tech: ["Python", "React"], rank: "pinned" });
+  });
+});
+
+describe("nameCase", () => {
+  it("turns a name set in capitals into a name, leaving credentials and mixed case alone", () => {
+    expect(nameCase("MAYA LINDQVIST")).toBe("Maya Lindqvist");
+    expect(nameCase("SEAN O'BRIEN-SMITH")).toBe("Sean O'Brien-Smith");
+    expect(nameCase("DANIEL OKAFOR, BSN, RN")).toBe("Daniel Okafor, BSN, RN");
+    expect(nameCase("Ana de la Cruz")).toBe("Ana de la Cruz");
+    expect(nameCase("")).toBe("");
   });
 });

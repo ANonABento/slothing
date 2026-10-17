@@ -204,8 +204,11 @@ export type DocKind = "resume" | "cover_letter";
 export interface Warning {
   where: string;
   message: string;
-  /** "number": a figure not found in the source. Recomputed whenever the resume changes. */
-  kind?: "number";
+  /**
+   * "number": a figure not found in the source. "posting": wording from the job ad the source doesn't have.
+   * Both are recomputed whenever the resume changes.
+   */
+  kind?: "number" | "posting";
 }
 
 export interface StoredDoc<T> {

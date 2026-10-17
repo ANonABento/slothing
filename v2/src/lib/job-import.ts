@@ -238,7 +238,8 @@ async function fromPageText(text: string, host: string): Promise<ImportedJob> {
     AiJob,
     `You extract one job posting from the text of a web page. Copy the job description verbatim: every section
 (about the role, responsibilities, requirements, benefits), without navigation, cookie banners or other jobs.
-Don't summarize or rewrite it. If the page isn't a single job posting, set "isJobPosting": false.
+Don't summarize or rewrite it. Copy the title exactly too, without shortening it. If the page isn't a single
+job posting, set "isJobPosting": false.
 JSON: { "company": string, "title": string, "location": string, "description": string, "isJobPosting": boolean }`,
     text.slice(0, 30_000),
   );
@@ -363,7 +364,9 @@ async function metaFromDescription(description: string): Promise<Omit<ImportedJo
   try {
     const meta = await generateJSON(
       JobMeta,
-      'Extract the hiring company, job title, and location from this job posting. JSON: { "company", "title", "location" }. Empty string if unknown.',
+      'Extract the hiring company, job title, and location from this job posting. Copy the title exactly as the posting writes it, ' +
+        'without shortening it ("Community Support Forecasting and Demand Planning Analyst", not "Forecasting Analyst"). ' +
+        'JSON: { "company", "title", "location" }. Empty string if unknown.',
       description.slice(0, 8000),
     );
     return { company: meta.company.trim(), title: meta.title.trim(), location: meta.location.trim() };

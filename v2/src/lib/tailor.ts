@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { hasTerm, keyTerms } from "./gap";
+import { hasTerm, keyTerms, spelledAs } from "./gap";
 import { generateJSON } from "./llm";
 import { withoutHidden } from "./resolve";
 import { CoverLetter, LETTER_LENGTHS, type Answer, Settings, TailoredResume, entriesOf, type EntryKind, type Job, type Latitude, type LetterLength, type LetterSettings, type Profile, type TailoringSettings, type Warning } from "./types";
@@ -15,9 +15,24 @@ import { CoverLetter, LETTER_LENGTHS, type Answer, Settings, TailoredResume, ent
 // Single-letter units need a word boundary so "5 key accounts" isn't read as "5k".
 const NUM = /(\d+(?:[.,]\d+)*)\s*(%|\s?percent\b|x\b|[kmb]\b|\+)?/gi;
 
+// Spelled-out numbers are numbers too ("ten engineers"). "One" isn't: it's mostly "one of", "one-on-one".
+const UNITS = ["", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"];
+const SMALL: Record<string, number> = {
+  ...Object.fromEntries(UNITS.slice(2).map((w, i) => [w, i + 2])),
+  ...Object.fromEntries("ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen".split(" ").map((w, i) => [w, i + 10])),
+};
+const TENS: Record<string, number> = Object.fromEntries("twenty thirty forty fifty sixty seventy eighty ninety".split(" ").map((w, i) => [w, (i + 2) * 10]));
+const NUMBER_WORD = new RegExp(`\\b(?:(${Object.keys(TENS).join("|")})(?:[- ](${UNITS.slice(1).join("|")}))?|(${Object.keys(SMALL).join("|")}))\\b`, "gi");
+
+/** "ten" → "10", "twenty-five" → "25", so a spelled-out figure is checked like a written one. */
+export const digitsFor = (s: string) =>
+  s.replace(NUMBER_WORD, (_, tens?: string, unit?: string, small?: string) =>
+    String(small ? SMALL[small.toLowerCase()] : TENS[tens!.toLowerCase()] + (unit ? UNITS.indexOf(unit.toLowerCase()) : 0)),
+  );
+
 function numbersIn(s: string): Set<string> {
   const out = new Set<string>();
-  for (const [, raw, unit = ""] of s.matchAll(NUM)) {
+  for (const [, raw, unit = ""] of digitsFor(s).matchAll(NUM)) {
     const n = raw.replace(/,/g, "").replace(/\.0+$/, "").replace(/\.$/, "");
     const u = unit.trim().toLowerCase().replace("percent", "%");
     out.add(n + u);
@@ -37,6 +52,21 @@ export function unsupportedNumbers(text: string, sources: string): string[] {
   });
 }
 
+/** "Mentions 12, 70%, which aren't in …": the numbers or terms, and the verb that agrees with them. */
+export const notIn = (items: string[], where: string) => `${items.join(", ")}, which ${items.length > 1 ? "aren't" : "isn't"} in ${where}`;
+
+/**
+ * Key terms of the posting that `text` uses and the profile never does: wording a draft lifted from the
+ * job ad ("hemodynamic monitoring"). Title words don't count ("Senior Analyst" may say "analyst"), and
+ * neither does a term the profile has spelled out or abbreviated.
+ */
+export function borrowedTerms(profile: Profile, text: string, job: Pick<Job, "title" | "description" | "company">, facts = profileFacts(profile)): string[] {
+  return keyTerms(job, profile.skills.flatMap((g) => g.items))
+    .filter((t) => hasTerm(text, t.term) && !hasTerm(facts, t.term) && !hasTerm(job.title, t.term) && !spelledAs(facts, t))
+    .map((t) => `“${t.label}”`)
+    .slice(0, 3);
+}
+
 /** The candidate's own words: what may vouch for a number. Excludes ids, contact details and the job posting. */
 export function profileFacts(p: Profile): string {
   return [
@@ -49,8 +79,13 @@ export function profileFacts(p: Profile): string {
   ].join("\n");
 }
 
-export function groundResume(profile: Profile, draft: TailoredResume): { doc: TailoredResume; warnings: Warning[] } {
+/**
+ * With the job, wording lifted from the posting is flagged too: in the summary when the profile never
+ * says it, and in a bullet when its cited sources don't.
+ */
+export function groundResume(profile: Profile, draft: TailoredResume, job?: Pick<Job, "title" | "description" | "company">): { doc: TailoredResume; warnings: Warning[] } {
   const warnings: Warning[] = [];
+  const facts = profileFacts(profile);
 
   const groundEntries = (kind: EntryKind, entries: TailoredResume["experience"], label: (id: string) => string) => {
     const list = entriesOf(profile, kind);
@@ -77,9 +112,14 @@ export function groundResume(profile: Profile, draft: TailoredResume): { doc: Ta
             warnings.push({ where: label(e.sourceId), message: `Dropped a bullet with no source in your profile: "${b.text}"` });
             return [];
           }
-          const nums = unsupportedNumbers(b.text, sourceIds.map((id) => srcBullets.get(id)).join(" "));
+          const cited = sourceIds.map((id) => srcBullets.get(id)).join(" ");
+          const nums = unsupportedNumbers(b.text, cited);
           if (nums.length) {
-            warnings.push({ where: label(e.sourceId), message: `"${b.text}" mentions ${nums.join(", ")}, which isn't in the source bullet.`, kind: "number" });
+            warnings.push({ where: label(e.sourceId), message: `"${b.text}" mentions ${notIn(nums, "the source bullet")}.`, kind: "number" });
+          }
+          const borrowed = job ? borrowedTerms(profile, b.text, job, cited) : [];
+          if (borrowed.length) {
+            warnings.push({ where: label(e.sourceId), message: `"${b.text}" uses ${notIn(borrowed, "the source bullet")}. It's the posting's wording.`, kind: "posting" });
           }
           return [{ text: b.text.trim(), sourceIds }];
         });
@@ -110,8 +150,10 @@ export function groundResume(profile: Profile, draft: TailoredResume): { doc: Ta
     })
     .filter((g) => g.items.length);
 
-  const summaryNums = unsupportedNumbers(draft.summary, profileFacts(profile));
-  if (summaryNums.length) warnings.push({ where: "summary", message: `Summary mentions ${summaryNums.join(", ")}, which isn't in your profile.`, kind: "number" });
+  const summaryNums = unsupportedNumbers(draft.summary, facts);
+  if (summaryNums.length) warnings.push({ where: "summary", message: `Summary mentions ${notIn(summaryNums, "your profile")}.`, kind: "number" });
+  const summaryBorrowed = job ? borrowedTerms(profile, draft.summary, job, facts) : [];
+  if (summaryBorrowed.length) warnings.push({ where: "summary", message: `Summary uses ${notIn(summaryBorrowed, "your profile")}. It's from the posting.`, kind: "posting" });
 
   const eduIds = draft.educationIds.filter((id) => profile.education.some((e) => e.id === id));
 
@@ -246,7 +288,7 @@ export async function tailorResume(full: Profile, job: Job, t: TailoringSettings
   // The model sometimes forgets education; default to all of it for an AI draft (hand edits may remove it).
   if (!draft.educationIds.length) draft.educationIds = profile.education.map((e) => e.id);
   if (t.latitude === "select") draft = verbatim(profile, draft);
-  return groundResume(full, withPinned(profile, draft));
+  return groundResume(full, withPinned(profile, draft), job);
 }
 
 /* ─── Reword one bullet ───
@@ -318,7 +360,9 @@ export async function rewordBullet(
     .slice(0, 3)
     .map((text) => {
       const nums = unsupportedNumbers(text, sources);
-      return nums.length ? { text, warning: `Mentions ${nums.join(", ")}, which isn't in the source bullet.` } : { text };
+      if (nums.length) return { text, warning: `Mentions ${notIn(nums, "the source bullet")}.` };
+      const borrowed = borrowedTerms(profile, text, job, sources);
+      return borrowed.length ? { text, warning: `Uses ${notIn(borrowed, "the source bullet")}. It's the posting's wording.` } : { text };
     });
 }
 
@@ -346,14 +390,30 @@ export async function writeCoverLetter(
 
 /**
  * Numbers in a letter must come from the profile. The posting only vouches for years ("Winter 2027 term"):
- * a "5+ years" in the requirements isn't the candidate's.
+ * a "5+ years" in the requirements isn't the candidate's. A number the letter quotes from the posting is
+ * said so, since it's often about the job ("5 billion events a day"). Posting wording is flagged only in
+ * sentences about you ("I have…", "my…") that aren't about them ("your team").
  */
-export function letterWarnings(profile: Profile, doc: CoverLetter, job?: Pick<Job, "title" | "description">, length?: LetterLength): Warning[] {
+export function letterWarnings(profile: Profile, doc: CoverLetter, job?: Pick<Job, "title" | "description" | "company">, length?: LetterLength): Warning[] {
   const postingYears = job ? (`${job.title} ${job.description}`.match(/\b(19|20)\d{2}\b/g) ?? []) : [];
   const facts = `${profileFacts(profile)}\n${postingYears.join(" ")}`;
+  const company = job?.company.trim().toLowerCase();
+  const aboutMe = (sentence: string) =>
+    /\b(I|I'm|I've|I'd|my|me)\b/.test(sentence) && !/\b(you|your|you're)\b/i.test(sentence) && !(company && sentence.toLowerCase().includes(company));
   const warnings: Warning[] = doc.paragraphs.flatMap((p, i) => {
+    const where = `Paragraph ${i + 1}`;
+    const out: Warning[] = [];
     const nums = unsupportedNumbers(p, facts);
-    return nums.length ? [{ where: `Paragraph ${i + 1}`, message: `Mentions ${nums.join(", ")}, which isn't in your profile.` }] : [];
+    const fromPosting = job ? nums.filter((n) => !unsupportedNumbers(n, job.description).length) : [];
+    const mine = nums.filter((n) => !fromPosting.includes(n));
+    if (mine.length) out.push({ where, message: `Mentions ${notIn(mine, "your profile")}.` });
+    if (fromPosting.length) out.push({ where, message: `Mentions ${fromPosting.join(", ")} from the posting. Fine if it's about the job, not a claim about you.` });
+    if (job) {
+      const claims = p.split(/(?<=[.!?])\s+/).filter(aboutMe).join(" ");
+      const borrowed = claims ? borrowedTerms(profile, claims, job, facts) : [];
+      if (borrowed.length) out.push({ where, message: `Says you have ${notIn(borrowed, "your profile")}. It's from the posting.` });
+    }
+    return out;
   });
   // A little slack, so a letter a few words over its target doesn't raise a warning every time.
   const words = wordCount(doc.paragraphs);
@@ -369,9 +429,8 @@ export const wordCount = (paragraphs: string[]) => paragraphs.join(" ").split(/\
 /* ─── Application answers ───
  * Drafts for questions on an application form (the extension) or in the answer bank, from the profile
  * only. A question the profile can't answer (salary, start date, visa status) comes back blank, so you
- * write it. Prose can't cite bullets, so drafts are checked like letters, plus one check letters don't
- * have yet: a key term of the posting that the profile never uses is flagged, since it's the posting's
- * claim, not yours.
+ * write it. Prose can't cite bullets, so drafts are checked like letters: numbers, and key terms of the
+ * posting that the profile never uses, since they're the posting's claim, not yours.
  */
 
 export interface DraftQuestion {
@@ -408,12 +467,10 @@ JSON shape: { "answers": [{ "id": string, "text": string }] }${preferences(instr
 export function answerWarning(profile: Profile, text: string, job?: Pick<Job, "title" | "description" | "company">): string | undefined {
   const facts = profileFacts(profile);
   const nums = unsupportedNumbers(text, facts);
-  if (nums.length) return `Mentions ${nums.join(", ")}, which isn't in your profile.`;
+  if (nums.length) return `Mentions ${notIn(nums, "your profile")}.`;
   if (!job?.description) return undefined;
-  const borrowed = keyTerms(job, profile.skills.flatMap((g) => g.items))
-    .filter((t) => hasTerm(text, t.term) && !hasTerm(facts, t.term) && !hasTerm(job.title, t.term))
-    .map((t) => `“${t.label}”`);
-  return borrowed.length ? `Uses ${borrowed.slice(0, 3).join(", ")} from the posting, which your profile doesn't mention.` : undefined;
+  const borrowed = borrowedTerms(profile, text, job, facts);
+  return borrowed.length ? `Uses ${borrowed.join(", ")} from the posting, which your profile doesn't mention.` : undefined;
 }
 
 export async function draftAnswers(

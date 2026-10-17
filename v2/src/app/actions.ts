@@ -152,7 +152,7 @@ export async function tailorResumeAction(jobId: string, useAI: boolean): Promise
 export async function saveResumeAction(jobId: string, data: TailoredResume): Promise<Result<Warning[]>> {
   try {
     // Hand edits are re-checked against the profile too.
-    const { doc, warnings } = groundResume(db.getProfile(), TailoredResume.parse(data));
+    const { doc, warnings } = groundResume(db.getProfile(), TailoredResume.parse(data), requireJob(jobId));
     db.saveDoc(jobId, "resume", doc, warnings, db.editedMeta(jobId, "resume"));
     revalidatePath(`/jobs/${jobId}`);
     return { ok: true, data: warnings };
@@ -212,7 +212,7 @@ export async function restoreVersionAction(jobId: string, kind: DocKind, version
     if (!v) return { ok: false, error: "That version is no longer in the history." };
     const profile = db.getProfile();
     if (kind === "resume") {
-      const { doc, warnings } = groundResume(profile, TailoredResume.parse(v.data));
+      const { doc, warnings } = groundResume(profile, TailoredResume.parse(v.data), job);
       db.saveDoc(jobId, "resume", doc, warnings, v.meta);
     } else {
       const letter = CoverLetter.parse(v.data);

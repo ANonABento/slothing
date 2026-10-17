@@ -195,11 +195,22 @@ export function reuseIds(prev: Profile, next: Profile): Profile {
   };
 }
 
+/**
+ * A name set in capitals on the resume ("MAYA LINDQVIST") is stored as a name ("Maya Lindqvist"): the
+ * resume design decides whether to show it in caps. Credentials after a comma ("BSN, RN") stay as written.
+ */
+export function nameCase(name: string): string {
+  const [first, ...rest] = name.split(",");
+  if (!/[A-Z]/.test(first) || first !== first.toUpperCase()) return name;
+  const cased = first.toLowerCase().replace(/(^|[\s'’-])(\p{L})/gu, (_, sep: string, c: string) => sep + c.toUpperCase());
+  return [cased, ...rest].join(",");
+}
+
 export async function parseResumeText(text: string): Promise<Profile> {
   const raw = await generateJSON(Imported, SYSTEM, `Resume text:\n\n${text.slice(0, 40000)}`);
   const withIds = (b: string[]) => b.filter((t) => t.trim()).map((text) => ({ id: newId("b"), text: text.trim() }));
   return Profile.parse({
-    contact: raw.contact,
+    contact: { ...raw.contact, name: nameCase(raw.contact.name) },
     summary: raw.summary,
     experience: raw.experience.map((e) => ({ ...e, id: newId("exp"), bullets: withIds(e.bullets) })),
     education: raw.education.map((e) => ({ ...e, id: newId("edu") })),

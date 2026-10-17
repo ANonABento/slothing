@@ -10,6 +10,7 @@ import { saveLetterAction, writeLetterAction } from "@/app/actions";
 import type { CoverLetter, Warning } from "@/lib/types";
 import { ListEditor } from "./list-editor";
 import { useConfirm } from "./confirm";
+import { useElapsed, working } from "./elapsed";
 import { SaveBar } from "./save-bar";
 import { Button, Input, Label, Textarea, Warnings, cx } from "./ui";
 
@@ -17,22 +18,29 @@ export function LetterEditor({
   jobId,
   initial,
   initialWarnings,
+  edited,
   targetWords,
 }: {
   jobId: string;
   initial: CoverLetter | null;
   initialWarnings: Warning[];
+  /** Hand-edited since AI wrote it. */
+  edited?: boolean;
   targetWords: number;
 }) {
   const [doc, setDoc] = useState(initial);
   const [saved, setSaved] = useState(initial);
   const [error, setError] = useState("");
   const [pending, start] = useTransition();
+  const [writing, setWriting] = useState(false);
+  const seconds = useElapsed(pending && writing);
   const { confirm, dialog } = useConfirm();
   const dirty = JSON.stringify(doc) !== JSON.stringify(saved);
 
   const generate = async () => {
-    if (doc && !(await confirm({ title: "Rewrite this cover letter?", body: "AI will write a new draft. Your edits to this letter will be lost.", confirmLabel: "Rewrite" }))) return;
+    // Only ask when there's something to lose: unsaved changes, or edits made since AI wrote it.
+    if (doc && (dirty || edited) && !(await confirm({ title: "Rewrite this cover letter?", body: "AI will write a new draft. Your edits to this letter will be lost.", confirmLabel: "Rewrite" }))) return;
+    setWriting(true);
     start(async () => {
       setError("");
       const res = await safe(() => writeLetterAction(jobId));
@@ -40,14 +48,17 @@ export function LetterEditor({
     });
   };
 
-  const blank = () =>
+  const blank = () => {
+    setWriting(false);
     start(async () => {
       const empty: CoverLetter = { greeting: "Dear Hiring Manager,", paragraphs: [""], closing: "Sincerely," };
       const res = await safe(() => saveLetterAction(jobId, empty));
       if (!res.ok) setError(res.error);
     });
+  };
 
-  const save = () =>
+  const save = () => {
+    setWriting(false);
     start(async () => {
       if (!doc) return;
       const res = await safe(() => saveLetterAction(jobId, doc));
@@ -55,13 +66,14 @@ export function LetterEditor({
         setSaved(doc);
       } else setError(res.error);
     });
+  };
 
   if (!doc) {
     return (
       <div className="space-y-3">
         <p className="text-sm text-ink-2">No cover letter yet.</p>
         <div className="flex gap-2">
-          <Button variant="primary" disabled={pending} onClick={generate}><Sparkles className="h-4 w-4" />{pending ? "Writing…" : "Write with AI"}</Button>
+          <Button variant="primary" disabled={pending} onClick={generate}><Sparkles className="h-4 w-4" />{pending && writing ? working("Writing", seconds) : "Write with AI"}</Button>
           <Button variant="ghost" disabled={pending} onClick={blank}>Start blank</Button>
         </div>
         {error && <p className="text-sm text-warn">{error}</p>}
@@ -74,7 +86,7 @@ export function LetterEditor({
     <fieldset disabled={pending} className="min-w-0 space-y-4">
       {dialog}
       <div>
-        <Button variant="secondary" disabled={pending} onClick={generate}><Sparkles className="h-4 w-4" />{pending ? "Writing…" : "Rewrite with AI"}</Button>
+        <Button variant="secondary" disabled={pending} onClick={generate}><Sparkles className="h-4 w-4" />{pending && writing ? working("Writing", seconds) : "Rewrite with AI"}</Button>
       </div>
       {error && <p className="text-sm text-warn">{error}</p>}
       {!dirty && <Warnings items={initialWarnings} />}

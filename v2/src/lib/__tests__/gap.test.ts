@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { addSource, hasTerm, keyTerms, keywordGap } from "../gap";
+import { addSource, hasTerm, keyTerms, keywordGap, spelledAs } from "../gap";
 import { profileAsTailored } from "../resolve";
 import type { TailoredResume } from "../types";
 import { profile } from "./fixture";
@@ -36,6 +36,46 @@ describe("keyTerms", () => {
     const once = { ...job, description: `${job.description} Bonus: Python.` };
     expect(keyTerms(once).map((t) => t.term)).not.toContain("python");
     expect(keyTerms(once, ["Python (pandas)", "SQL"]).map((t) => t.term)).toContain("python");
+  });
+
+  it("names the tools a posting lists, even once, but not the places or customers it lists", () => {
+    const tools = {
+      ...job,
+      description: `${job.description}
+      Improve observability (OpenTelemetry, Grafana).
+      Nice to have:
+      - ClickHouse
+      - Terraform
+      Offices in Toronto, Canada and Austin, Texas. Trusted by Acme, Initech and Umbrella.`,
+    };
+    const labels = keyTerms(tools).map((t) => t.label);
+    expect(labels).toEqual(expect.arrayContaining(["OpenTelemetry", "Grafana", "ClickHouse", "Terraform"]));
+    for (const l of ["Canada", "Texas", "Acme", "Initech"]) expect(labels).not.toContain(l);
+  });
+
+  it("doesn't read the verb as a skill spelled like one", () => {
+    const go = { ...job, description: `${job.description} You'll go beyond the basics.` };
+    expect(keyTerms(go, ["Go"]).map((t) => t.term)).not.toContain("go");
+    expect(keyTerms({ ...go, description: `${go.description} We write Go.` }, ["Go"]).map((t) => t.term)).toContain("go");
+  });
+
+  it("leaves out seniority and legal footnotes", () => {
+    const senior = {
+      ...job,
+      title: "Senior Platform Engineer",
+      description: `${job.description}\nFortune 500® is a registered trademark of Fortune Media IP Limited. Fortune and Fortune Media are not affiliated with Globex.`,
+    };
+    const labels = keyTerms(senior).map((t) => t.label.toLowerCase());
+    expect(labels).not.toContain("senior");
+    expect(labels.some((l) => l.includes("fortune"))).toBe(false);
+  });
+});
+
+describe("spelledAs", () => {
+  it("matches an acronym to its spelled-out form, either way round", () => {
+    expect(spelledAs("Registered Nurse in the ICU", { term: "rn", label: "RN" })).toBe("Registered Nurse");
+    expect(spelledAs("Grew traffic with SEO", { term: "search engine", label: "Search Engine Optimization" })).toBe("SEO");
+    expect(spelledAs("Nursing for patients", { term: "rn", label: "RN" })).toBeNull();
   });
 });
 

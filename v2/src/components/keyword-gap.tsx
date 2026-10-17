@@ -50,6 +50,7 @@ export function KeywordGap({ job, profile, doc, onChange }: { job: Pick<Job, "ti
         <Sources
           term={selected.term}
           sources={selected.status.sources}
+          as={selected.status.as}
           onAdd={(s) => {
             onChange(addSource(doc, s));
             // Close once the term is on the page; keep it open while other sources remain to choose from.
@@ -90,10 +91,15 @@ function Chip({ term, status, active, onClick }: { term: KeyTerm; status: TermSt
   );
 }
 
-function Sources({ term, sources, onAdd }: { term: KeyTerm; sources: GapSource[]; onAdd: (s: GapSource) => void }) {
+function Sources({ term, sources, as, onAdd }: { term: KeyTerm; sources: GapSource[]; as?: string; onAdd: (s: GapSource) => void }) {
   return (
     <div className="mt-3 border-t border-rule pt-3">
-      {sources.length === 0 ? (
+      {as ? (
+        <p className="text-xs text-ink-2">
+          Your profile says &ldquo;{as}&rdquo;, the posting &ldquo;{term.label}&rdquo;. Applicant tracking systems may only match the
+          posting&apos;s spelling, so add it to your profile where it fits (&ldquo;{as} ({term.label})&rdquo;).
+        </p>
+      ) : sources.length === 0 ? (
         <p className="text-xs text-ink-2">
           &ldquo;{term.label}&rdquo; is in your profile, but only in a title, school or summary, not in a bullet or skill you can add here.
         </p>

@@ -157,7 +157,7 @@ function ImportPanel({ hasData, onImported }: { hasData: boolean; onImported: (p
         className="space-y-3"
       >
         <input type="file" name="file" aria-label="Resume file" accept=".pdf,.docx,.txt,.md" className="block text-sm text-ink-2 file:mr-3 file:h-9 file:rounded-control file:border file:border-ink file:bg-transparent file:px-3 file:text-sm file:font-medium file:text-ink" />
-        <Textarea name="text" rows={4} value={text} onChange={(e) => setText(e.target.value)} aria-label="Resume text" placeholder="…or paste resume text here" />
+        <Textarea name="text" rows={4} className="max-h-[40vh]" value={text} onChange={(e) => setText(e.target.value)} aria-label="Resume text" placeholder="…or paste resume text here" />
         {error && <p className="text-sm text-warn">{error}</p>}
         <div className="flex gap-2">
           <Button variant="primary" disabled={pending}><Sparkles className="h-4 w-4" />{pending ? "Parsing…" : "Parse resume"}</Button>

@@ -13,6 +13,7 @@ import { CommaInput } from "./comma-input";
 import { ListEditor, itemActions, type ItemControls } from "./list-editor";
 import { useConfirm } from "./confirm";
 import { Dropdown } from "./dropdown";
+import { useElapsed, working } from "./elapsed";
 import { EntryCard, count, dates, joinParts } from "./entry-card";
 import { KeywordGap } from "./keyword-gap";
 import { RowMenu } from "./row-menu";
@@ -238,24 +239,43 @@ export function ResumeEditor({
   profile,
   initial,
   initialWarnings,
+  version,
+  edited,
 }: {
   jobId: string;
   job: Pick<Job, "title" | "description" | "company">;
   profile: Profile;
   initial: TailoredResume | null;
   initialWarnings: Warning[];
+  /** When the stored resume last changed; a new one (save, tailor, restore) replaces the draft. */
+  version?: string;
+  /** Hand-edited since it was tailored. */
+  edited?: boolean;
 }) {
   const [doc, setDoc] = useState<TailoredResume | null>(initial);
   const [saved, setSaved] = useState(initial);
   const [warnings, setWarnings] = useState(initialWarnings);
   const [error, setError] = useState("");
   const [pending, start] = useTransition();
+  const [tailoring, setTailoring] = useState(false);
+  const seconds = useElapsed(pending && tailoring);
   const { confirm, dialog } = useConfirm();
   const dirty = JSON.stringify(doc) !== JSON.stringify(saved);
 
+  // Take a new stored version in place rather than remounting, so the roles you have open stay open.
+  const [shown, setShown] = useState(version);
+  if (version !== shown) {
+    setShown(version);
+    setDoc(initial);
+    setSaved(initial);
+    setWarnings(initialWarnings);
+  }
+
   const generate = async (useAI: boolean) => {
+    // Only ask when there's something to lose: unsaved changes, or edits made since it was tailored.
     if (
       doc &&
+      (dirty || edited) &&
       !(await confirm({
         title: "Replace this resume?",
         body: useAI
@@ -265,15 +285,17 @@ export function ResumeEditor({
       }))
     )
       return;
+    setTailoring(useAI);
     start(async () => {
       setError("");
       const res = await safe(() => tailorResumeAction(jobId, useAI));
       if (!res.ok) setError(res.error);
-      // The server re-renders this page with the new doc; the key on this component resets state.
+      // The server re-renders this page with the new doc, which arrives as a new `version`.
     });
   };
 
-  const save = () =>
+  const save = () => {
+    setTailoring(false);
     start(async () => {
       if (!doc) return;
       setError("");
@@ -283,12 +305,13 @@ export function ResumeEditor({
         setWarnings(res.data ?? []);
       } else setError(res.error);
     });
+  };
 
   const actions = (
     <div className="flex flex-wrap gap-2">
       <Button variant={doc ? "secondary" : "primary"} disabled={pending} onClick={() => generate(true)}>
         <Sparkles className="h-4 w-4" />
-        {pending ? "Working…" : doc ? "Re-tailor with AI" : "Tailor with AI"}
+        {pending && tailoring ? working("Tailoring", seconds) : pending ? "Working…" : doc ? "Re-tailor with AI" : "Tailor with AI"}
       </Button>
       <Button variant="ghost" disabled={pending} onClick={() => generate(false)}>Tailor without AI</Button>
       <Link href={settingsHref("tailoring", `/jobs/${jobId}`)} className={buttonClass("ghost", "md", "ml-auto")}>
@@ -311,7 +334,7 @@ export function ResumeEditor({
   }
 
   return (
-    // Locked while saving/generating: the editor remounts with server data afterwards, so typing now would be lost.
+    // Locked while saving/generating: the server's version replaces the draft afterwards, so typing now would be lost.
     <fieldset disabled={pending} className="min-w-0 space-y-4">
       {dialog}
       {actions}

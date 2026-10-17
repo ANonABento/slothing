@@ -155,6 +155,10 @@ const tag = (el: Element) => {
   return el.getAttribute(ATTR)!;
 };
 
+/** A row of toggle buttons that answers one question (Ashby's Yes / No), standing in for a radio group. */
+const toggles = (box: Element) => [...box.children].filter((c): c is HTMLButtonElement => c instanceof HTMLButtonElement && c.hasAttribute("aria-pressed") && visible(c));
+const isToggleRow = (el: Element) => toggles(el).length >= 2;
+
 /** Every fillable field in this frame, in page order. `combos` counts the searchable dropdowns among them. */
 export function read(): { fields: FormField[]; combos: number; frames: number } {
   const fields: FormField[] = [];
@@ -189,6 +193,24 @@ export function read(): { fields: FormField[]; combos: number; frames: number } 
       options: el instanceof HTMLSelectElement ? [...el.options].map((o) => clean(o.text)) : [],
       required: el.required || el.getAttribute("aria-required") === "true",
       value: el instanceof HTMLSelectElement ? selectedText(el) : kind === "file" ? (el as HTMLInputElement).files?.[0]?.name ?? "" : el.value.trim(),
+    });
+  }
+  for (const box of new Set([...document.querySelectorAll("button[aria-pressed]")].map((b) => b.parentElement))) {
+    if (!box || !isToggleRow(box) || toggles(box).length > 8) continue;
+    const buttons = toggles(box);
+    const pressed = buttons.find((b) => b.getAttribute("aria-pressed") === "true");
+    const heading = box.previousElementSibling;
+    fields.push({
+      id: tag(box),
+      kind: "radio",
+      label: nearbyText(box),
+      name: box.querySelector("input")?.name ?? "",
+      placeholder: "",
+      autocomplete: "",
+      options: buttons.map((b) => clean(b.innerText)),
+      // Ashby marks a required question on its heading, not on the hidden input.
+      required: Boolean(box.querySelector("input[required]")) || /required/i.test(heading?.className.toString() ?? ""),
+      value: pressed ? clean(pressed.innerText) : "",
     });
   }
   for (const group of radios.values()) {
@@ -305,6 +327,37 @@ async function pickCombo(el: HTMLInputElement, value: string, loose: boolean): P
   return true;
 }
 
+/**
+ * A text field that searches as you type and only keeps a value picked from its results (Lever's "Current
+ * location" clears typed text when you leave it). Type, wait for the results that appear beside it, and
+ * pick the closest. Null when no results appear: then it's a plain text field after all.
+ */
+async function pickSuggestion(el: HTMLInputElement, value: string): Promise<boolean | null> {
+  const box = el.parentElement ?? el;
+  const before = new Set([...box.querySelectorAll("*")].filter(visible));
+  el.focus();
+  setValue(el, value, false);
+  // Search runs on a keystroke (Lever listens for keydown), not on the value changing.
+  for (const type of ["keydown", "keyup"]) el.dispatchEvent(new KeyboardEvent(type, { key: value.slice(-1), bubbles: true }));
+  const options = () => {
+    const list = [...box.querySelectorAll("*")].filter(
+      (e): e is HTMLElement => e instanceof HTMLElement && !before.has(e) && !e.children.length && visible(e) && Boolean(e.innerText.trim()) && getComputedStyle(e).pointerEvents !== "none",
+    );
+    return list.length ? list : null;
+  };
+  // Results come after a debounce and a lookup.
+  const list = await waitFor(options, 3000);
+  if (!list) return null;
+  const option = list[Math.max(0, matchOption(value, list.map((o) => o.innerText)))];
+  option.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, cancelable: true, button: 0 }));
+  option.click();
+  await sleep(50);
+  return el.value.trim() !== "";
+}
+
+// A profile location typed into a field that may search as you type.
+const LOCATION = /locat|city/i;
+
 export interface PageFill {
   id: string;
   value?: string;
@@ -319,9 +372,22 @@ async function fill(fills: PageFill[]): Promise<string[]> {
   const done: string[] = [];
   for (const f of fills) {
     const els = all(f.id);
-    const el = els[0];
+    const el = els[0] as Element | undefined;
     if (!el) continue;
-    if (f.file && el instanceof HTMLInputElement && el.type === "file") {
+    if (isToggleRow(el)) {
+      const buttons = toggles(el);
+      const i = matchOption(f.value ?? "", buttons.map((b) => clean(b.innerText)));
+      if (i < 0) continue;
+      if (buttons[i].getAttribute("aria-pressed") !== "true") buttons[i].click();
+      mark(el);
+    } else if (f.loose && el instanceof HTMLInputElement && el.type === "text" && LOCATION.test(`${el.name} ${el.id} ${el.className} ${labelOf(el, false)}`)) {
+      const picked = await pickSuggestion(el, f.value ?? "");
+      if (picked === false) continue;
+      if (picked === null) setValue(el, f.value ?? "");
+      // A field that clears typed text on blur: it isn't filled.
+      if (!el.value.trim()) continue;
+      mark(el);
+    } else if (f.file && el instanceof HTMLInputElement && el.type === "file") {
       const bytes = Uint8Array.from(atob(f.file.base64), (c) => c.charCodeAt(0));
       const dt = new DataTransfer();
       dt.items.add(new File([bytes], f.file.name, { type: "application/pdf" }));

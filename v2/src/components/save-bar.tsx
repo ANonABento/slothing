@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 import { Button } from "./ui";
 
@@ -38,6 +38,45 @@ export function useUnsavedGuard(dirty: boolean, keepPrefix?: string) {
   }, [dirty, keepPrefix]);
 }
 
+/** The element that scrolls `el`: the app's <main> on wide screens, the page otherwise. */
+function scroller(el: HTMLElement): Element {
+  for (let p = el.parentElement; p; p = p.parentElement) {
+    const { overflowY } = getComputedStyle(p);
+    if ((overflowY === "auto" || overflowY === "scroll") && p.scrollHeight > p.clientHeight) return p;
+  }
+  return document.scrollingElement ?? document.documentElement;
+}
+
+/**
+ * The bar floats over the bottom of the page, so it can cover the field you're typing in (it appears on
+ * your first keystroke). Scroll that field up above it when it appears, and as you focus or type.
+ */
+function useKeepAbove(dirty: boolean) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!dirty) return;
+    const reveal = () => {
+      const bar = ref.current;
+      const el = document.activeElement;
+      if (!bar || !(el instanceof HTMLElement) || el === document.body || bar.contains(el)) return;
+      const b = bar.getBoundingClientRect();
+      const f = el.getBoundingClientRect();
+      if (f.bottom <= b.top - 8 || f.top >= b.bottom) return;
+      // Never push the field's top off the screen (a tall textarea): its start matters more.
+      const by = Math.min(f.bottom - b.top + 16, f.top - 16);
+      if (by > 0) scroller(bar).scrollBy({ top: by });
+    };
+    reveal();
+    document.addEventListener("focusin", reveal);
+    document.addEventListener("input", reveal);
+    return () => {
+      document.removeEventListener("focusin", reveal);
+      document.removeEventListener("input", reveal);
+    };
+  }, [dirty]);
+  return ref;
+}
+
 /** Sticks to the bottom of its scroll container while there are unsaved changes. */
 export function SaveBar({
   dirty,
@@ -56,9 +95,10 @@ export function SaveBar({
   keepPrefix?: string;
 }) {
   useUnsavedGuard(dirty, keepPrefix);
+  const ref = useKeepAbove(dirty);
   if (!dirty) return null;
   return (
-    <div className="sticky bottom-4 z-10 flex items-center gap-3 rounded-card border border-ink bg-paper px-4 py-2.5 shadow-panel">
+    <div ref={ref} className="sticky bottom-4 z-10 flex items-center gap-3 rounded-card border border-ink bg-paper px-4 py-2.5 shadow-panel">
       <span className="h-2 w-2 rounded-full bg-brand" aria-hidden />
       <span className="text-sm font-medium">Unsaved changes</span>
       <div className="ml-auto flex gap-2">
