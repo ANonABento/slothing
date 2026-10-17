@@ -122,6 +122,8 @@ export function migrate(db: Database.Database) {
   const cols = (table: string) => (db.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[]).map((c) => c.name);
   const jobCols = cols("jobs");
   if (jobCols.length && !jobCols.includes("last_seen_at")) db.exec("ALTER TABLE jobs ADD COLUMN last_seen_at TEXT");
+  if (jobCols.length && !jobCols.includes("visit_started_at")) db.exec("ALTER TABLE jobs ADD COLUMN visit_started_at TEXT");
+  if (jobCols.length && !jobCols.includes("prev_visit_at")) db.exec("ALTER TABLE jobs ADD COLUMN prev_visit_at TEXT");
   createVersions(db);
   createAnswers(db);
 }
@@ -164,8 +166,8 @@ export function saveSettings(settings: Settings) {
 
 /* ─── Jobs ─── */
 
-type JobRow = Omit<Job, "createdAt" | "updatedAt" | "lastSeenAt"> & { created_at: string; updated_at: string; last_seen_at: string | null };
-const toJob = ({ created_at, updated_at, last_seen_at, ...r }: JobRow): Job => ({ ...r, lastSeenAt: last_seen_at ?? null, createdAt: created_at, updatedAt: updated_at });
+type JobRow = Omit<Job, "createdAt" | "updatedAt" | "lastSeenAt"> & { created_at: string; updated_at: string; last_seen_at: string | null; visit_started_at?: string | null; prev_visit_at?: string | null };
+const toJob = ({ created_at, updated_at, last_seen_at, visit_started_at: _v, prev_visit_at: _p, ...r }: JobRow): Job => ({ ...r, lastSeenAt: last_seen_at ?? null, createdAt: created_at, updatedAt: updated_at });
 
 export function listJobs(): Job[] {
   return (db.prepare("SELECT * FROM jobs ORDER BY updated_at DESC").all() as JobRow[]).map(toJob);
@@ -180,14 +182,34 @@ export function createJob(input: Pick<Job, "company" | "title" | "url" | "locati
   const id = newId("job");
   const t = now();
   db.prepare(
-    "INSERT INTO jobs (id, company, title, url, location, description, status, notes, last_seen_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, '', ?, ?, ?)",
-  ).run(id, input.company, input.title, normalizeUrl(input.url), input.location, input.description, status, status === "seen" ? t : null, t, t);
+    "INSERT INTO jobs (id, company, title, url, location, description, status, notes, last_seen_at, visit_started_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, '', ?, ?, ?, ?)",
+  ).run(id, input.company, input.title, normalizeUrl(input.url), input.location, input.description, status, status === "seen" ? t : null, status === "seen" ? t : null, t, t);
   return id;
 }
 
-/** You opened the posting again. Doesn't count as an update, so the Jobs list order stays yours. */
-export function touchSeen(id: string) {
-  db.prepare("UPDATE jobs SET last_seen_at = ? WHERE id = ?").run(now(), id);
+/** Opening a posting again within this long is the same visit (another tab, a reload, the form step). */
+const VISIT_MS = 30 * 60_000;
+
+/**
+ * You opened the posting. Returns when you were here before this visit (null on the first one).
+ * Doesn't count as an update, so the Jobs list order stays yours.
+ */
+export function touchSeen(id: string): string | null {
+  const row = db.prepare("SELECT last_seen_at, visit_started_at, prev_visit_at, created_at FROM jobs WHERE id = ?").get(id) as
+    | { last_seen_at: string | null; visit_started_at: string | null; prev_visit_at: string | null; created_at: string }
+    | undefined;
+  if (!row) return null;
+  const t = now();
+  const last = row.last_seen_at ?? row.created_at;
+  const sameVisit = Date.now() - new Date(last).getTime() < VISIT_MS;
+  if (sameVisit) {
+    db.prepare("UPDATE jobs SET last_seen_at = ? WHERE id = ?").run(t, id);
+    return row.prev_visit_at;
+  }
+  // A new visit: the one before it is the visit that just ended.
+  const prev = row.visit_started_at ?? last;
+  db.prepare("UPDATE jobs SET last_seen_at = ?, visit_started_at = ?, prev_visit_at = ? WHERE id = ?").run(t, t, prev, id);
+  return prev;
 }
 
 const JOB_COLUMNS = ["company", "title", "url", "location", "description", "notes", "status"] as const;
@@ -373,7 +395,23 @@ export function listApplications(jobId: string): Application[] {
 const latestVersion = (jobId: string, kind: DocKind) =>
   (db.prepare("SELECT id FROM document_versions WHERE job_id = ? AND kind = ? ORDER BY created_at DESC, rowid DESC LIMIT 1").get(jobId, kind) as { id: string } | undefined)?.id ?? null;
 
+/** Submitting twice in a few minutes (a resubmit, or Mark applied after it was detected) is one application. */
+const SAME_APPLICATION_MS = 15 * 60_000;
+
 export function recordApplication(jobId: string, url: string, answers: Application["answers"]): string {
+  const last = listApplications(jobId)[0];
+  if (last && Date.now() - new Date(last.submittedAt).getTime() < SAME_APPLICATION_MS) {
+    // Keep the fuller record: Mark applied on a page that's already gone reads no fields.
+    const keep = answers.length >= last.answers.length;
+    db.prepare("UPDATE applications SET url = ?, answers = ?, resume_version = ?, letter_version = ? WHERE id = ?").run(
+      keep ? url : last.url,
+      JSON.stringify(keep ? answers : last.answers),
+      latestVersion(jobId, "resume"),
+      latestVersion(jobId, "cover_letter"),
+      last.id,
+    );
+    return last.id;
+  }
   const id = newId("app");
   db.prepare("INSERT INTO applications (id, job_id, url, answers, resume_version, letter_version, submitted_at) VALUES (?, ?, ?, ?, ?, ?, ?)").run(
     id,

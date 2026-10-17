@@ -73,14 +73,38 @@ setInterval(() => {
   setTimeout(report, 2500);
 }, 1000);
 
-/* ─── Submitting ─── */
+/* ─── Submitting ───
+ * A click on Submit on a form Slothing filled starts an application; it counts once the page shows it
+ * went through: a thank-you message, or the form gone. A form still there with no such message was
+ * refused (a required field), so it doesn't count and the next Submit tries again. Leaving the page is
+ * handled by the background worker, since this script goes with the page.
+ */
 
-let sent = false;
+const DONE = /thank(s| you)|application (was |has been )?(submitted|received|sent|complete)|we('ve| have) received|successfully (submitted|applied)/i;
+let submitting = false;
+
 function submitted() {
   // Only forms Slothing filled: anything else is none of its business.
-  if (sent || !document.querySelector("[data-slothing-filled]")) return;
-  sent = true;
-  void chrome.runtime.sendMessage({ type: "submitted", url: location.href, fields: read().fields }).catch(() => {});
+  const filled = [...document.querySelectorAll("[data-slothing-filled]")];
+  if (submitting || !filled.length) return;
+  submitting = true;
+  const before = document.body?.innerText ?? "";
+  void chrome.runtime.sendMessage({ type: "submit-started", url: location.href, fields: read().fields }).catch(() => {});
+  let checks = 0;
+  const check = () => {
+    const text = document.body?.innerText ?? "";
+    const thanked = DONE.test(text) && !DONE.test(before);
+    const gone = filled.every((el) => !el.isConnected);
+    if (thanked || gone) {
+      void chrome.runtime.sendMessage({ type: "submit-confirmed" }).catch(() => {});
+      return;
+    }
+    // Uploads and slow servers: look for ~10 s before calling it refused.
+    if (++checks < 10) return void setTimeout(check, 1000);
+    submitting = false;
+    void chrome.runtime.sendMessage({ type: "submit-failed" }).catch(() => {});
+  };
+  setTimeout(check, 1000);
 }
 
 document.addEventListener("submit", submitted, true);

@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import * as db from "../db";
 import { applied, saveJob, seen } from "../extension";
@@ -20,9 +20,10 @@ describe("seen → saved → applied", () => {
     const first = await seen(posting("a1"));
     expect(first.job).toMatchObject({ status: "seen", title: "Data Analyst a1", company: "Example Co" });
     expect(first.before).toBeNull();
+    // Its form, a minute later: the same visit, so not "seen before".
     const again = await seen({ ...posting("a1"), url: "https://careers.example.com/jobs/a1/apply" });
     expect(again.job?.id).toBe(first.job?.id);
-    expect(again.before).toBeTruthy();
+    expect(again.before).toBeNull();
     expect(db.listJobs().filter((j) => j.title === "Data Analyst a1")).toHaveLength(1);
   });
 
@@ -52,5 +53,29 @@ describe("seen → saved → applied", () => {
       { question: "First name", answer: "Alex" },
       { question: "Why us?", answer: "Because." },
     ]);
+    // Marked applied again right after (no fields on the page any more): still one application, answers kept.
+    applied({ jobId: job!.id, url: "https://careers.example.com/thanks", fields: [] });
+    expect(db.listApplications(job!.id)).toHaveLength(1);
+    expect(db.listApplications(job!.id)[0].answers).toHaveLength(2);
+  });
+});
+
+describe("visits", () => {
+  afterEach(() => vi.useRealTimers());
+
+  it("counts a return after 30 minutes as seen before, and repeats within it as the same visit", async () => {
+    const day = 24 * 60 * 60_000;
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-10-01T10:00:00Z"));
+    expect((await seen(posting("v1"))).before).toBeNull();
+    vi.setSystemTime(new Date("2026-10-01T10:05:00Z"));
+    expect((await seen(posting("v1"))).before).toBeNull();
+    // The next day: seen before, at the first visit's start.
+    vi.setSystemTime(new Date(Date.parse("2026-10-01T10:00:00Z") + day));
+    const back = await seen(posting("v1"));
+    expect(back.before).toBe("2026-10-01T10:00:00.000Z");
+    // A reload in that visit says the same.
+    vi.setSystemTime(new Date(Date.parse("2026-10-01T10:10:00Z") + day));
+    expect((await seen(posting("v1"))).before).toBe("2026-10-01T10:00:00.000Z");
   });
 });

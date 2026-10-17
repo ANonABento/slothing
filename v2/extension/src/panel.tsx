@@ -1,5 +1,5 @@
 import { AlertTriangle, Check, ExternalLink, FileText, History, Loader2, MessageSquareText, Paperclip, PenLine, Plus, Send, Sparkles, Wand2 } from "lucide-react";
-import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 
 import { Dropdown } from "@/components/dropdown";
@@ -7,7 +7,7 @@ import { Button, Eyebrow, Input, buttonClass, cx } from "@/components/ui";
 import type { AnswerProposal, Fill, FormField, Skip } from "@/lib/autofill";
 import type { JobSummary } from "@/lib/extension";
 import { ago } from "@/lib/format";
-import { jobKey, tabKey, type TabState } from "./session";
+import { hostOf, jobKey, pageOf, rememberedJob, tabKey, type RememberedJob, type TabState } from "./session";
 import {
   ApiError,
   activeTab,
@@ -41,7 +41,7 @@ async function readFormSoon(tab: Tab): Promise<PageForm> {
   return form;
 }
 
-type Loaded = { conn: Connection; tab: Tab; status: Status; form: PageForm | null; formError: string; looking: boolean; before: string | null };
+type Loaded = { conn: Connection; tab: Tab; status: Status; form: PageForm | null; formError: string; looking: boolean; before: string | null; login: boolean };
 
 type FillResult = {
   filled: { id: string; source: Fill["source"] | "ai"; label: string }[];
@@ -62,7 +62,11 @@ function App() {
     kind: "loading",
   });
 
+  // Each load gets a number; a slower, older one (from the tab you just left) is dropped when it lands.
+  const latest = useRef(0);
   const load = useCallback(async () => {
+    const run = ++latest.current;
+    const current = () => run === latest.current;
     const conn = await getConnection();
     if (!conn) return setState({ kind: "connect" });
     const tab = await activeTab();
@@ -70,24 +74,27 @@ function App() {
     try {
       const readable = /^https?:/.test(tab.url);
       // What the background worker knows about this tab: the job it's applying for, when you'd seen it.
-      const session = (await chrome.storage.session.get([jobKey(tab.id), tabKey(tab.id)])) as Record<string, unknown>;
-      const remembered = session[jobKey(tab.id)] as string | undefined;
-      const tabState = session[tabKey(tab.id)] as TabState | undefined;
+      const remembered = await rememberedJob(tab.id, tab.url);
+      const tabState = (await chrome.storage.session.get(tabKey(tab.id)))[tabKey(tab.id)] as TabState | undefined;
       const [status, form] = await Promise.all([
         api.status(conn, tab.url, remembered),
         readable ? readForm(tab).then((f) => ({ f, e: "" }), (e: Error) => ({ f: null, e: e.message })) : Promise.resolve({ f: null, e: "Slothing can't read this kind of page." }),
       ]);
+      if (!current()) return;
       applyTheme(status.theme);
       void chrome.storage.local.set({ theme: status.theme });
       const late = readable && form.f && !form.f.fields.length && !form.f.blockedFrames;
-      const before = tabState?.url === tab.url ? tabState.before : null;
-      setState({ kind: "ready", conn, tab, status, form: form.f, formError: form.e, looking: Boolean(late), before });
+      const sameTab = tabState && pageOf(tabState.url) === pageOf(tab.url);
+      const before = sameTab ? tabState.before : null;
+      const login = Boolean(sameTab && tabState.kind.login);
+      setState({ kind: "ready", conn, tab, status, form: form.f, formError: form.e, looking: Boolean(late), before, login });
       // A form some apps render after load (Ashby): keep looking a moment, without holding up the rest.
       if (late) {
         const again = await readFormSoon(tab).catch(() => null);
-        setState((s) => (s.kind === "ready" && s.tab.id === tab.id ? { ...s, form: again ?? s.form, looking: false } : s));
+        if (current()) setState((s) => (s.kind === "ready" && s.tab.id === tab.id ? { ...s, form: again ?? s.form, looking: false } : s));
       }
     } catch (e) {
+      if (!current()) return;
       if (e instanceof ApiError && e.unauthorized) return setState({ kind: "connect", error: e.message });
       setState({ kind: "error", error: (e as Error).message, conn });
     }
@@ -148,7 +155,7 @@ function App() {
           </div>
         )}
         {/* Keyed by tab and page, so a new page starts fresh (no fill results from the last one). */}
-        {state.kind === "ready" && <Main key={`${state.tab.id}:${state.tab.url}`} {...state} reload={load} disconnect={() => setConnection(null).then(() => setState({ kind: "connect" }))} />}
+        {state.kind === "ready" && <Main key={`${state.tab.id}:${pageOf(state.tab.url)}`} {...state} reload={load} disconnect={() => setConnection(null).then(() => setState({ kind: "connect" }))} />}
       </div>
     </div>
   );
@@ -186,7 +193,7 @@ function Connect({ error, onConnected }: { error?: string; onConnected: () => vo
 
 /* ─── The open tab ─── */
 
-function Main({ conn, tab, status, form, formError, looking, before, reload, disconnect }: Loaded & { reload: () => void; disconnect: () => void }) {
+function Main({ conn, tab, status, form, formError, looking, before, login, reload, disconnect }: Loaded & { reload: () => void; disconnect: () => void }) {
   const [job, setJobState] = useState<JobSummary | null>(status.job);
   const [view, setView] = useState<"main" | "save">("main");
   const hasForm = Boolean(form?.fields.length);
@@ -200,7 +207,7 @@ function Main({ conn, tab, status, form, formError, looking, before, reload, dis
     setJobState(j);
     if (j) void chrome.runtime.sendMessage({ type: "job-changed", tabId: tab.id, job: j }).catch(() => {});
     if (!hasForm) return;
-    if (j) void chrome.storage.session.set({ [jobKey(tab.id)]: j.id });
+    if (j) void chrome.storage.session.set({ [jobKey(tab.id)]: { jobId: j.id, host: hostOf(tab.url) } satisfies RememberedJob });
     else void chrome.storage.session.remove(jobKey(tab.id));
   };
 
@@ -211,10 +218,10 @@ function Main({ conn, tab, status, form, formError, looking, before, reload, dis
           <JobSection conn={conn} tab={tab} status={status} job={job} setJob={setJob} hasForm={hasForm} before={before} open={open} />
           {form && (form.fields.length > 0 || form.combos > 0) ? (
             <FormSection conn={conn} tab={tab} form={form} job={job} setJob={setJob} llm={status.llm} onSaveAnswers={() => setView("save")} open={open} />
-          ) : job && !form?.blockedFrames && !formError ? null : (
+          ) : job && !login && !form?.blockedFrames && !formError ? null : (
             <Section>
               <p className="text-xs leading-relaxed text-ink-3">
-                {looking ? "Looking for an application form…" : formError || (form?.blockedFrames ? "" : "No application form on this page. Open the application to fill it.")}
+                {login ? "A sign-in page. Sign in yourself (Slothing never touches passwords), then fill the application." : looking ? "Looking for an application form…" : formError || (form?.blockedFrames ? "" : "No application form on this page. Open the application to fill it.")}
               </p>
               {form?.blockedFrames ? <FrameAccess onGranted={reload} /> : null}
             </Section>

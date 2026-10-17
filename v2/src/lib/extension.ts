@@ -151,8 +151,8 @@ export async function seen(input: unknown): Promise<{ job: JobSummary | null; be
   const page = SeenInput.parse(input);
   const existing = jobForUrl(page.url);
   if (existing) {
-    db.touchSeen(existing.id);
-    return { job: summary(db.getJob(existing.id)!), before: existing.lastSeenAt ?? existing.createdAt };
+    const before = db.touchSeen(existing.id);
+    return { job: summary(db.getJob(existing.id)!), before };
   }
   if (!db.getSettings().extension.autoSave) return { job: null, before: null };
   let read;
@@ -166,8 +166,8 @@ export async function seen(input: unknown): Promise<{ job: JobSummary | null; be
   }
   const again = jobForUrl(read.url);
   if (again) {
-    db.touchSeen(again.id);
-    return { job: summary(db.getJob(again.id)!), before: again.lastSeenAt ?? again.createdAt };
+    const before = db.touchSeen(again.id);
+    return { job: summary(db.getJob(again.id)!), before };
   }
   const id = db.createJob(read, "seen");
   return { job: summary(db.getJob(id)!), before: null };
