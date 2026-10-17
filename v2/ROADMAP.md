@@ -47,7 +47,8 @@ bullet, import a job from its URL. On 2026-10-16, also at his request, the exten
 - **Extension** *(built; side panel since 2026-10-16)*. Click the icon for a panel beside the page that
   follows your tab. Every page is classified locally (posting / form / sign-in) and shown as the badge.
   Postings you open are recorded as **Seen** (Jobs → Seen: a history, and "seen before" when you
-  return; structured data only, never AI). From the panel: **Save**, **Tailor**, **Fill form** (profile,
+  return; structured data only, never AI). From the panel: **Save**, **Tailor**, **Write cover letter** (each then shows its PDF and what to check
+  before sending), **Fill form** (profile,
   answer bank, tailored PDFs; never submits), **Save my answers**, and **applied** is recorded when you
   submit a form it filled (answers + resume version, on the job page). Matching lives in
   `src/lib/autofill.ts`; the extension only reads and writes the page. Chrome only.
@@ -66,6 +67,116 @@ bullet, import a job from its URL. On 2026-10-16, also at his request, the exten
   hint ("shorter", "lead with the result"). Pick one or dismiss. Not on Profile: the profile is
   your own words, and rewording it with AI would blur what the AI is grounded against.
 
+## Next up (planned 2026-10-17, not started)
+
+From "what's still missing" and a look at similar tools (Simplify, Teal, Huntr, Jobscan; self-hosted
+job-ops and JobSync). Slothing already covers what they do, except a fit score, follow-ups,
+local models and Workday. Bulk auto-apply, job discovery/alerts, contacts, Kanban and LinkedIn
+optimization are **not planned**: each is another product, and auto-apply works against grounding.
+
+Order: **A → B → C → E → F**, with **D** (real use) running alongside. E was gated on the friction log;
+Kevin chose to build it now (2026-10-17).
+
+### A. Housekeeping (no features)
+
+1. **Commit** what's waiting, as three commits: panel shows tailoring results + Write cover letter;
+   keys in Settings; migration race fix.
+2. **Real-browser checks** (Kevin; headless can't do these). Each result goes in `FRICTION.md`:
+   - Clicking the toolbar icon opens the side panel and it follows tab switches.
+   - The panel after Tailor and Write cover letter: warnings readable, View PDF opens.
+   - LinkedIn while logged in: a posting badges as New/Seen, Save job reads the description.
+   - A Workday apply flow: Fill on each step (tells us whether F is needed).
+3. **Docker.** Docker isn't installed on this Mac (OrbStack or Docker Desktop is needed). Then
+   `docker compose up --build` on a copy of the data. Pass: a resume PDF renders with the same page
+   count as `npm run dev`, a key saved in Settings survives a container restart, and the Extension
+   page connects. Fix what breaks. Keep the README's Docker section only if it passes.
+
+### B. Local models (Ollama, LM Studio)
+
+Today a local endpoint can't be used: `resolveLlm` only picks a provider with a key, and Ollama has
+none. Ollama is running on this Mac (`qwen3.5:4b`), so this can be tested for real.
+
+- `llm.ts`: the OpenAI provider counts as configured without a key when its endpoint is on this
+  machine (`localhost`, `127.0.0.1`, `[::1]`, `host.docker.internal`). No `Authorization` header then.
+  Labelled "Local (OpenAI-compatible)".
+- **JSON mode fallback:** some servers reject `response_format: json_object` (LM Studio wants
+  `json_schema`). On a 400 that names `response_format`, retry once without it. `extractJSON` and
+  the existing retry already cope with loose output.
+- **Timeout:** 5 min for a local endpoint (a 4B model on a laptop is slow), 2 min otherwise.
+- **Settings:** under the endpoint field, "Ollama: http://localhost:11434/v1 · LM Studio:
+  http://localhost:1234/v1 · no key needed". README: from Docker, use `host.docker.internal`.
+- **Tests:** a local endpoint with no key resolves; a remote endpoint with no key doesn't; the JSON-mode retry.
+- **Check:** with `qwen3.5:4b`, import a resume, tailor one job, write one letter. Log time and
+  grounding warnings in `FRICTION.md`. A small model is expected to be weaker, and grounding is what
+  keeps it honest. If it can't import at all, say so in Settings instead of shipping a trap.
+- ~60 lines. No new settings, no model downloads from the app.
+
+### C. Fit score on postings (no AI)
+
+Answers "is this worth applying to?" before you save or tailor. It reuses the keyword gap's
+machinery: the posting's key terms (`keyTerms`), split into the ones your profile has and the ones
+it doesn't (`hasTerm` / `spelledAs` over the whole profile, hidden items included).
+
+- **Shown as a band plus counts, not a percentage** (LinkedIn's "N of M skills" style, which shows its
+  evidence; Jobscan's and Jobright's percentages look more precise than a term count is): "Strong fit · 14 of 18 key terms", "Partial",
+  "Weak", plus up to 3 missing terms ("Missing: Kubernetes, Terraform"). The missing side is the
+  noisiest (leftover boilerplate, place names), so a percentage would look more exact than it is.
+  Bands are tuned on the 15 Greenhouse postings from the 2026-10-17 dogfood, then on real ones.
+- **`gap.ts`:** `fitOf(profile, job)` returns `{ band, have, total, missing[] }`, or `null` without a
+  description (LinkedIn seen in passing). Pure and unit-tested. Computed when shown, never stored, so it
+  never goes stale when the profile changes. Hundreds of jobs are fine; the profile text is built once.
+- **Where it shows:**
+  - Jobs list: a chip on each row; in Seen, a "Best fit" sort next to "Recent".
+  - Panel: under the posting's title, before Save (`JobSummary.fit`).
+  - Job page: the band in the keyword gap's header, which already lists the terms.
+- **Not:** LLM ranking (job-ops does it, but it costs a call per posting you open), weights per
+  term, a "should I apply" verdict.
+- ~150 lines with tests.
+
+### D. Use it (Iteration 1, step 6)
+
+Ten real applications, with `FRICTION.md` kept as you go. This decides whether E and F happen. Do it
+alongside B and C, not after them.
+
+### E. Follow-ups
+
+- **Applied date, one source:** the `applications` table. Setting the status to Applied by hand
+  records an application too (no answers), like the panel's Mark applied, so every applied job has a
+  date.
+- **`jobs.follow_up_at`** (nullable): set when a job is applied (applied + 7 days). Cleared when the
+  status moves on (interviewing, offer, rejected, archived). Snooze (+3 days, +1 week) and Done.
+- **Jobs page:** a "Follow up" card at the top when any are due: company · role · "applied 9 days
+  ago", with Copy follow-up note (a template filled from the job and profile, no AI), Snooze, and
+  Got a reply → Interviewing / Rejected. The Jobs count in the sidebar shows how many are due. Applied
+  rows say "Applied 9d" instead of "updated".
+- Ships by deleting the Follow-ups placeholder in `src/lib/roadmap.ts`. Not included: email or
+  calendar integration, notifications, an AI-written follow-up.
+
+### F. Fill works on any application site (after B, C, E)
+
+Kevin: it should work on all kinds of sites, not only Workday. So it isn't a Workday driver: it's
+handling the custom widgets application sites are built from, by what they are (ARIA roles, the
+visible label), and then a pass over each major platform with fixes where it falls short. No
+per-site scripts unless a site can't be handled any other way.
+
+1. **Widgets, generically** (`extension/src/page.ts`):
+   - Comboboxes and listboxes by ARIA role (`role=combobox`/`listbox`/`option`, `aria-haspopup`):
+     open them, type to filter, pick the matching option. Greenhouse's react-select and Lever's
+     location search are special cases of this today.
+   - Button groups (Yes/No as buttons) and `role=radio`/`role=switch`/`role=checkbox` that aren't inputs.
+   - Split dates (month/year selects or spinbuttons) and date pickers with a typed input.
+   - `contenteditable` text areas.
+   - Repeaters ("Add another" for roles and education): fill the ones there; adding rows only
+     where the platform has no resume parser (below).
+2. **Platforms, one at a time.** On each: fill a real form up to Review without submitting, then log
+   what was missed. Workday (multi-step; attach the PDF first so its parser fills My Experience, and
+   the panel notices a new step even when the URL doesn't change), iCIMS (often an iframe), SmartRecruiters,
+   Workable, Taleo / Oracle Recruiting, SuccessFactors, Jobvite, BambooHR, Rippling, LinkedIn Easy Apply (a modal
+   with steps), Indeed Apply, and a company's own form.
+3. **Never:** submit, create accounts, enter passwords, solve CAPTCHAs. Sign-in stays yours.
+4. **Pass:** a table in `FRICTION.md` per platform with fields filled / left, and no wrong value in a
+   field (a wrong value is worse than an empty one).
+
 ## Iteration 3: self-hosting (others can run it with their own data and keys)
 
 The data is already one SQLite file (`SLOTHING_DATA_DIR`) and the keys are already the user's own,
@@ -74,7 +185,7 @@ so this is mostly packaging. In order, each step only if the one before falls sh
 1. **Docker image.** One `docker run` with a volume for the data folder and Typst baked in. Keys
    come from env vars, as now. *Written (`Dockerfile`, `docker-compose.yml`), not yet built in Docker.*
 2. **Keys in Settings.** Entered in the app and stored locally, so a user never edits `.env.local`.
-   Env vars still win when set.
+   Env vars still win when set. *Done 2026-10-17 (pulled forward: a fresh start stalled on it).*
 3. **Backup and restore.** Download the database file from Settings and load it back.
 4. **Desktop app** (Tauri or Electron around the same server) if Docker is too much for the
    people using it.
