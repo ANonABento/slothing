@@ -2,10 +2,11 @@ import { Briefcase, ChevronRight } from "lucide-react";
 import Link from "next/link";
 
 import { AddJob } from "@/components/add-job";
+import { FollowUps } from "@/components/follow-ups";
 import { PageBody, PageHeader } from "@/components/page-header";
 import { Card, EmptyState, Eyebrow, FitChip, StatusPill, cx } from "@/components/ui";
 import { SegmentedLinks } from "@/components/segmented-links";
-import { getProfile, listJobs } from "@/lib/db";
+import { dueFollowUps, getProfile, listJobs } from "@/lib/db";
 import { ago } from "@/lib/format";
 import { fitOf, type Fit } from "@/lib/gap";
 import { llmConfigured } from "@/lib/llm";
@@ -56,6 +57,7 @@ export default async function JobsPage({ searchParams }: { searchParams: Promise
       <PageBody>
         <div className="space-y-4">
           {(profileEmpty || !llmConfigured()) && <SetupCard profileEmpty={profileEmpty} llm={llmConfigured()} />}
+          {view === "active" && <FollowUps jobs={dueFollowUps()} name={profile.contact.name} />}
 
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex flex-wrap items-center gap-3">
@@ -96,7 +98,9 @@ export default async function JobsPage({ searchParams }: { searchParams: Promise
                     </div>
                     {fits.get(j.id) && <FitChip fit={fits.get(j.id)!} className="hidden md:inline-flex" />}
                     <StatusPill status={j.status} />
-                    <div className="hidden w-24 text-right text-xs text-ink-3 sm:block">{j.status === "seen" && j.lastSeenAt ? ago(j.lastSeenAt) : ago(j.updatedAt)}</div>
+                    <div className="hidden w-28 text-right text-xs text-ink-3 sm:block">
+                      {j.status === "seen" && j.lastSeenAt ? ago(j.lastSeenAt) : j.status === "applied" && j.appliedAt ? `Applied ${ago(j.appliedAt).toLowerCase()}` : ago(j.updatedAt)}
+                    </div>
                     <ChevronRight className="h-4 w-4 text-ink-3 transition-transform group-hover:translate-x-0.5" />
                   </Card>
                 </Link>

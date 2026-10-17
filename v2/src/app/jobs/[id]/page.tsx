@@ -39,7 +39,7 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
       <PageBody>
         <div className="space-y-6">
           <JobPanel job={job} />
-          <Applications jobId={job.id} items={listApplications(job.id)} />
+          <Applications jobId={job.id} items={listApplications(job.id)} followUpAt={job.status === "applied" ? job.followUpAt : null} />
           <JobDocuments jobId={job.id} job={{ title: job.title, description: job.description, company: job.company }} profile={getProfile()} resume={getDoc(job.id, "resume")} letter={getDoc(job.id, "cover_letter")}
             letterWords={LETTER_LENGTHS[getSettings().letter.length]}
             resumePages={pageLimit(getSettings().resume.pages)}

@@ -1,4 +1,4 @@
-import { BellRing, ChartColumn, Mic, type LucideIcon } from "lucide-react";
+import { ChartColumn, Mic, type LucideIcon } from "lucide-react";
 
 /**
  * Pages that are planned but not built, shown in the sidebar as placeholders (see ROADMAP.md).
@@ -19,16 +19,6 @@ export interface PlannedPage {
 }
 
 export const PLANNED: PlannedPage[] = [
-  {
-    slug: "follow-ups",
-    v1Path: "/en/calendar",
-    label: "Follow-ups",
-    icon: BellRing,
-    when: "Later",
-    summary: "When you applied, and a nudge when a job has been quiet for a while.",
-    v1: "A calendar, reminders and cron jobs. The follow-up reminder was built but never wired up.",
-    gate: "You lose track of applications while using the Jobs list.",
-  },
   {
     slug: "interview",
     v1Path: "/en/interview",

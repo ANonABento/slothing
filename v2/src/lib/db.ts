@@ -18,6 +18,9 @@ import {
   type Warning,
 } from "./types";
 
+/** A job you applied to is due a follow-up this long after, if nothing has moved. (Up here: migrations use it.) */
+export const FOLLOW_UP_DAYS = 7;
+
 const DATA_DIR = process.env.SLOTHING_DATA_DIR || join(process.cwd(), "data");
 // Belt and braces: a test run that bypasses vitest.config (e.g. a stray file run from elsewhere) must not touch real data.
 if (process.env.VITEST && !process.env.SLOTHING_DATA_DIR) {
@@ -133,6 +136,12 @@ function addColumns(db: Database.Database) {
   if (jobCols.length && !jobCols.includes("last_seen_at")) db.exec("ALTER TABLE jobs ADD COLUMN last_seen_at TEXT");
   if (jobCols.length && !jobCols.includes("visit_started_at")) db.exec("ALTER TABLE jobs ADD COLUMN visit_started_at TEXT");
   if (jobCols.length && !jobCols.includes("prev_visit_at")) db.exec("ALTER TABLE jobs ADD COLUMN prev_visit_at TEXT");
+  if (jobCols.length && !jobCols.includes("follow_up_at")) {
+    db.exec("ALTER TABLE jobs ADD COLUMN follow_up_at TEXT");
+    // Jobs applied to before follow-ups existed: due a week after their last application (or last update).
+    const applied = cols("applications").length ? "(SELECT MAX(submitted_at) FROM applications a WHERE a.job_id = jobs.id)" : "NULL";
+    db.prepare(`UPDATE jobs SET follow_up_at = strftime('%Y-%m-%dT%H:%M:%fZ', COALESCE(${applied}, updated_at), '+${FOLLOW_UP_DAYS} days') WHERE status = 'applied'`).run();
+  }
   createVersions(db);
   createAnswers(db);
 }
@@ -175,15 +184,31 @@ export function saveSettings(settings: Settings) {
 
 /* ─── Jobs ─── */
 
-type JobRow = Omit<Job, "createdAt" | "updatedAt" | "lastSeenAt"> & { created_at: string; updated_at: string; last_seen_at: string | null; visit_started_at?: string | null; prev_visit_at?: string | null };
-const toJob = ({ created_at, updated_at, last_seen_at, visit_started_at: _v, prev_visit_at: _p, ...r }: JobRow): Job => ({ ...r, lastSeenAt: last_seen_at ?? null, createdAt: created_at, updatedAt: updated_at });
+type JobRow = Omit<Job, "createdAt" | "updatedAt" | "lastSeenAt" | "followUpAt" | "appliedAt"> & {
+  created_at: string;
+  updated_at: string;
+  last_seen_at: string | null;
+  follow_up_at: string | null;
+  applied_at: string | null;
+  visit_started_at?: string | null;
+  prev_visit_at?: string | null;
+};
+const toJob = ({ created_at, updated_at, last_seen_at, follow_up_at, applied_at, visit_started_at: _v, prev_visit_at: _p, ...r }: JobRow): Job => ({
+  ...r,
+  lastSeenAt: last_seen_at ?? null,
+  followUpAt: follow_up_at ?? null,
+  appliedAt: applied_at ?? null,
+  createdAt: created_at,
+  updatedAt: updated_at,
+});
+const JOB_SELECT = "SELECT jobs.*, (SELECT MAX(submitted_at) FROM applications a WHERE a.job_id = jobs.id) AS applied_at FROM jobs";
 
 export function listJobs(): Job[] {
-  return (db.prepare("SELECT * FROM jobs ORDER BY updated_at DESC").all() as JobRow[]).map(toJob);
+  return (db.prepare(`${JOB_SELECT} ORDER BY updated_at DESC`).all() as JobRow[]).map(toJob);
 }
 
 export function getJob(id: string): Job | null {
-  const row = db.prepare("SELECT * FROM jobs WHERE id = ?").get(id) as JobRow | undefined;
+  const row = db.prepare(`${JOB_SELECT} WHERE id = ?`).get(id) as JobRow | undefined;
   return row ? toJob(row) : null;
 }
 
@@ -237,7 +262,36 @@ export function updateJob(id: string, patch: JobPatch) {
   if (!keys.length) return;
   const sets = keys.map((k) => `${k} = @${k}`).join(", ");
   const params = Object.fromEntries(keys.map((k) => [k, patch[k]]));
+  const before = patch.status ? getJob(id)?.status : undefined;
   db.prepare(`UPDATE jobs SET ${sets}, updated_at = @updated_at WHERE id = @id`).run({ ...params, id, updated_at: now() });
+  if (patch.status && patch.status !== before) statusChanged(id, patch.status);
+}
+
+/* ─── Follow-ups ─── */
+
+const inDays = (days: number) => new Date(Date.now() + days * 86_400_000).toISOString();
+
+/**
+ * Applied: every applied job has an application (marking it by hand records one, with no answers) and a
+ * follow-up date. Any other status: nothing to follow up.
+ */
+function statusChanged(id: string, status: JobStatus) {
+  if (status === "applied") {
+    if (!listApplications(id).length) recordApplication(id, "", []);
+    db.prepare("UPDATE jobs SET follow_up_at = COALESCE(follow_up_at, ?) WHERE id = ?").run(inDays(FOLLOW_UP_DAYS), id);
+  } else {
+    db.prepare("UPDATE jobs SET follow_up_at = NULL WHERE id = ?").run(id);
+  }
+}
+
+/** Remind again in `days`, or never (null). Doesn't count as an update to the job. */
+export function setFollowUp(id: string, days: number | null) {
+  db.prepare("UPDATE jobs SET follow_up_at = ? WHERE id = ?").run(days === null ? null : inDays(days), id);
+}
+
+/** Applied jobs whose follow-up date has come, longest waiting first. */
+export function dueFollowUps(): Job[] {
+  return (db.prepare(`${JOB_SELECT} WHERE status = 'applied' AND follow_up_at IS NOT NULL AND follow_up_at <= ? ORDER BY follow_up_at`).all(now()) as JobRow[]).map(toJob);
 }
 
 export function setJobStatus(id: string, status: JobStatus) {

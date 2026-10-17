@@ -103,6 +103,20 @@ export async function saveApiKeyAction(provider: string, key: string): Promise<R
 
 /* ─── Jobs ─── */
 
+/** Follow-ups on an applied job: remind again in a few days ("snooze"), a week after you sent one ("sent"), or never ("stop"). */
+export async function followUpAction(id: string, op: "snooze" | "sent" | "stop"): Promise<Result> {
+  try {
+    const days = { snooze: 3, sent: db.FOLLOW_UP_DAYS, stop: null }[z.enum(["snooze", "sent", "stop"]).parse(op)];
+    requireJob(String(id));
+    db.setFollowUp(String(id), days);
+    revalidatePath("/", "layout");
+    revalidatePath(`/jobs/${id}`);
+    return { ok: true };
+  } catch (e) {
+    return fail(e);
+  }
+}
+
 /** The Add job form: a link, a pasted description or both. Opens the new job. */
 export async function addJobAction(_prev: Result | null, form: FormData): Promise<Result> {
   const field = (k: string) => String(form.get(k) ?? "");
@@ -139,7 +153,7 @@ const JobPatch = z
 export async function updateJobAction(id: string, patch: z.input<typeof JobPatch>): Promise<Result> {
   try {
     db.updateJob(String(id), JobPatch.parse(patch));
-    revalidatePath("/");
+    revalidatePath("/", "layout");
     revalidatePath(`/jobs/${id}`);
     return { ok: true };
   } catch (e) {

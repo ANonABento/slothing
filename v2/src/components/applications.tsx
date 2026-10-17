@@ -2,18 +2,20 @@ import { ChevronRight, FileText, Send } from "lucide-react";
 
 import { hostOf } from "@/lib/format";
 import type { Application } from "@/lib/types";
+import { FollowUpLine } from "./follow-ups";
 import { Card, CardTitle } from "./ui";
 
 const when = (iso: string) => new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" }).format(new Date(iso));
 
 /** What you sent for this job: recorded when you submit a form the extension filled, or mark it applied. */
-export function Applications({ jobId, items }: { jobId: string; items: Application[] }) {
-  if (!items.length) return null;
+export function Applications({ jobId, items, followUpAt }: { jobId: string; items: Application[]; followUpAt: string | null }) {
+  if (!items.length && !followUpAt) return null;
   return (
     <Card className="p-5">
       <div className="mb-3 flex items-center gap-2">
         <Send className="h-4 w-4 text-ink-3" />
         <CardTitle>Applied</CardTitle>
+        {followUpAt && <FollowUpLine jobId={jobId} at={followUpAt} />}
       </div>
       <ul className="space-y-3">
         {items.map((a) => (

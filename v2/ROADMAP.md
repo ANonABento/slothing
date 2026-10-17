@@ -140,7 +140,7 @@ it doesn't (`hasTerm` / `spelledAs` over the whole profile, hidden items include
 Ten real applications, with `FRICTION.md` kept as you go. This decides whether E and F happen. Do it
 alongside B and C, not after them.
 
-### E. Follow-ups
+### E. Follow-ups — done 2026-10-17
 
 - **Applied date, one source:** the `applications` table. Setting the status to Applied by hand
   records an application too (no answers), like the panel's Mark applied, so every applied job has a
@@ -148,9 +148,11 @@ alongside B and C, not after them.
 - **`jobs.follow_up_at`** (nullable): set when a job is applied (applied + 7 days). Cleared when the
   status moves on (interviewing, offer, rejected, archived). Snooze (+3 days, +1 week) and Done.
 - **Jobs page:** a "Follow up" card at the top when any are due: company · role · "applied 9 days
-  ago", with Copy follow-up note (a template filled from the job and profile, no AI), Snooze, and
-  Got a reply → Interviewing / Rejected. The Jobs count in the sidebar shows how many are due. Applied
-  rows say "Applied 9d" instead of "updated".
+  ago", with Copy note (a template from the job and your name, no AI), Sent it (again in a week),
+  Later (3 days), Heard back… → Interviewing / Offer / Rejected / No longer interested, and Stop.
+  The sidebar's Jobs item counts how many are due. Applied rows say "Applied 9 days ago". The job
+  page's Applied card says when it's due, with Stop. Jobs applied before this shipped got a date a
+  week after their last application.
 - Ships by deleting the Follow-ups placeholder in `src/lib/roadmap.ts`. Not included: email or
   calendar integration, notifications, an AI-written follow-up.
 
@@ -201,7 +203,6 @@ Not planned: a hosted multi-user version. That brings back auth, `user_id` and b
   every application is recorded, which is what an agent needs. Not before the human-in-the-loop version
   has been used for real.
 
-- **Follow-ups.** Applied date, plus a nudge when nothing has happened in N days.
 - **Interview prep.** Likely questions from the job description and your profile.
 - **Insights.** Funnel counts: saved → applied → interview → offer.
 - **Company research.** A notes panel on the job page, not its own page.
@@ -217,7 +218,7 @@ Not planned: a hosted multi-user version. That brings back auth, `user_id` and b
 | Extension connect, extension | **Extension** (shipped: save job, fill form, save answers) |
 | ATS scanner | **Keyword gap** on the job page (Iteration 2) |
 | Templates (custom upload) | Not planned: Resume design in Settings (presets + every style setting) replaced it |
-| Calendar, reminders | **Follow-ups** (later) |
+| Calendar, reminders | **Follow-ups** on the Jobs page (shipped) |
 | Answer bank, Answers | **Answer bank** (shipped) |
 | Interview | **Interview prep** (later) |
 | Dashboard, Analytics | **Insights** (later) |

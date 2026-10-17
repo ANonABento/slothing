@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Geist, JetBrains_Mono, Outfit } from "next/font/google";
 
 import { Sidebar } from "@/components/sidebar";
-import { getSettings } from "@/lib/db";
+import { dueFollowUps, getSettings } from "@/lib/db";
 import { llmInfo } from "@/lib/llm";
 import "./globals.css";
 
@@ -35,7 +35,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="antialiased">
         <div className="flex min-h-screen flex-col lg:h-screen lg:flex-row">
-          <Sidebar llm={llmInfo()} />
+          <Sidebar llm={llmInfo()} due={dueFollowUps().length} />
           <main className="min-w-0 flex-1 lg:overflow-y-auto">{children}</main>
         </div>
       </body>

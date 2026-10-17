@@ -56,7 +56,8 @@ function ThemeToggle() {
   );
 }
 
-export function Sidebar({ llm }: { llm: { provider: string; model: string } | null }) {
+/** `due`: applied jobs due a follow-up, shown on Jobs. */
+export function Sidebar({ llm, due }: { llm: { provider: string; model: string } | null; due: number }) {
   const path = usePathname();
   return (
     <aside className="flex shrink-0 flex-col border-b border-rule bg-page lg:w-[248px] lg:border-b-0 lg:border-r">
@@ -105,6 +106,11 @@ export function Sidebar({ llm }: { llm: { provider: string; model: string } | nu
                   >
                     <Icon className={cx("h-[18px] w-[18px]", active ? "text-brand" : "text-ink-3")} />
                     {label}
+                    {href === "/" && due > 0 && (
+                      <span className="ml-auto rounded-chip bg-brand px-1.5 font-mono text-xs leading-5 text-paper" title={`${due} to follow up`}>
+                        {due}
+                      </span>
+                    )}
                   </Link>
                 );
               })}

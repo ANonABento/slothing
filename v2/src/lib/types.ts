@@ -137,6 +137,10 @@ export interface Job {
   notes: string;
   /** When the extension last saw you open the posting. */
   lastSeenAt: string | null;
+  /** When you last applied (the latest application recorded). */
+  appliedAt: string | null;
+  /** When an applied job is due a follow-up; null when there's nothing to follow up. */
+  followUpAt: string | null;
   createdAt: string;
   updatedAt: string;
 }
