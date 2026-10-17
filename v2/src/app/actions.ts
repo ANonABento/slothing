@@ -7,7 +7,7 @@ import * as db from "@/lib/db";
 import { jobForUrl, resetExtensionKey } from "@/lib/extension";
 import { extractText, parseResumeText, reuseIds } from "@/lib/import";
 import { readJob } from "@/lib/job-import";
-import { saveKey, testLlm } from "@/lib/llm";
+import { listModels, saveKey, testLlm } from "@/lib/llm";
 import { tailorJob, writeLetter } from "@/lib/tailor-job";
 import { draftAnswers, groundResume, letterWarnings, rewordBullet, type DraftAnswer, type Rewording } from "@/lib/tailor";
 import { CoverLetter, JOB_STATUSES, PROVIDERS, Profile, Settings, TailoredBullet, TailoredResume, type AiSettings, type DocKind, type Warning } from "@/lib/types";
@@ -74,6 +74,15 @@ export async function setThemeModeAction(mode: "light" | "dark"): Promise<Result
 export async function testLlmAction(ai: AiSettings): Promise<Result<{ provider: string; model: string; ms: number }>> {
   try {
     return { ok: true, data: await testLlm(Settings.shape.ai.parse(ai)) };
+  } catch (e) {
+    return fail(e);
+  }
+}
+
+/** Model ids the OpenAI-compatible endpoint serves, as suggestions for the model field. Empty when it can't be asked. */
+export async function listModelsAction(ai: AiSettings): Promise<Result<string[]>> {
+  try {
+    return { ok: true, data: await listModels(Settings.shape.ai.parse(ai)) };
   } catch (e) {
     return fail(e);
   }

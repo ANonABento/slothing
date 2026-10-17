@@ -28,6 +28,8 @@ npm run v1                 # optional: the archived v1 app on http://localhost:3
 
 Data lives in `v2/data/slothing.db` (override with `SLOTHING_DATA_DIR`), and so do keys entered in Settings.
 Keys can also come from the environment (`cp .env.example .env.local`), which wins when both are set.
+A model on your own machine (Ollama, LM Studio) needs no key: Settings → AI model → use Ollama. From Docker,
+the endpoint is `http://host.docker.internal:11434/v1`.
 
 ### Browser extension (Chrome)
 

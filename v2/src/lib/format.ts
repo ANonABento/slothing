@@ -12,3 +12,13 @@ export function hostOf(url: string) {
     return "";
   }
 }
+
+/** An endpoint on this machine (Ollama, LM Studio), which needs no API key. `host.docker.internal` is the host, seen from Docker. */
+export function isLocalEndpoint(url: string) {
+  try {
+    const host = new URL(url).hostname;
+    return ["localhost", "127.0.0.1", "[::1]", "host.docker.internal"].includes(host) || host.endsWith(".localhost");
+  } catch {
+    return false;
+  }
+}

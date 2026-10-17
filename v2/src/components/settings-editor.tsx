@@ -5,7 +5,8 @@ import Link from "next/link";
 import { useRouter, useSearchParams, useSelectedLayoutSegment } from "next/navigation";
 import { useEffect, useRef, useState, useTransition, type ReactNode } from "react";
 
-import { saveApiKeyAction, saveSettingsAction, testLlmAction } from "@/app/actions";
+import { listModelsAction, saveApiKeyAction, saveSettingsAction, testLlmAction } from "@/app/actions";
+import { isLocalEndpoint } from "@/lib/format";
 import type { ProviderStatus } from "@/lib/llm";
 import { safe } from "@/lib/safe";
 import { MODE_SAVED_EVENT, applyAppearance } from "@/lib/theme";
@@ -33,11 +34,32 @@ type Test = { state: "idle" } | { state: "running" } | { state: "ok"; text: stri
 
 function ModelSection({ ai, providers, onChange }: { ai: Settings["ai"]; providers: ProviderStatus[]; onChange: (ai: Settings["ai"]) => void }) {
   const [test, setTest] = useState<Test>({ state: "idle" });
+  const [models, setModels] = useState<string[]>([]);
+  const base = ai.openaiBaseUrl.trim() || providers.find((p) => p.provider === "openai")!.defaultBase;
+  const local = isLocalEndpoint(base);
+  // Same rule as the server's resolveLlm: a key, or a model server on this machine.
+  const usable = (p: ProviderStatus) => p.hasKey || (p.provider === "openai" && local);
   const chosen = ai.provider ? providers.find((p) => p.provider === ai.provider)! : null;
-  const fallback = providers.find((p) => p.hasKey);
-  const withKey = providers.filter((p) => p.hasKey);
+  const fallback = providers.find(usable);
+  const withKey = providers.filter(usable);
   // The provider that will actually be called, so the model field edits the right one.
-  const active = chosen?.hasKey ? chosen : fallback;
+  const active = chosen && usable(chosen) ? chosen : fallback;
+  const activeLabel = active?.provider === "openai" && local ? "Local" : active?.label;
+
+  // A local server (or OpenRouter) lists what it serves: offer those as the model field's suggestions.
+  useEffect(() => {
+    if (active?.provider !== "openai") return setModels([]);
+    let live = true;
+    const t = setTimeout(async () => {
+      const res = await safe(() => listModelsAction(ai));
+      if (live) setModels(res.ok ? (res.data ?? []) : []);
+    }, 400);
+    return () => {
+      live = false;
+      clearTimeout(t);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [active?.provider, ai.openaiBaseUrl]);
 
   const update = (next: Settings["ai"]) => {
     onChange(next);
@@ -53,7 +75,7 @@ function ModelSection({ ai, providers, onChange }: { ai: Settings["ai"]; provide
 
   const options = [
     { value: "auto" as const, label: `Automatic${fallback ? ` (${fallback.label})` : ""}`, text: "Automatic" },
-    ...providers.map((p) => ({ value: p.provider, label: p.hasKey ? p.label : `${p.label} · no key`, text: p.label })),
+    ...providers.map((p) => ({ value: p.provider, label: usable(p) ? (p.provider === "openai" && local ? "Local (OpenAI-compatible)" : p.label) : `${p.label} · no key`, text: p.label })),
   ];
 
   return (
@@ -68,13 +90,17 @@ function ModelSection({ ai, providers, onChange }: { ai: Settings["ai"]; provide
           />
         </Field>
         {active && (
-          <Field label={`${active.label} model`}>
+          <Field label={`${activeLabel} model`}>
             <Input
               value={ai.models[active.provider]}
               onChange={(e) => update({ ...ai, models: { ...ai.models, [active.provider]: e.target.value } })}
-              placeholder={active.defaultModel}
+              placeholder={local && active.provider === "openai" ? (models[0] ?? "first model it serves") : active.defaultModel}
+              list="ai-models"
               spellCheck={false}
             />
+            <datalist id="ai-models">
+              {models.map((m) => <option key={m} value={m} />)}
+            </datalist>
           </Field>
         )}
       </div>
@@ -84,8 +110,19 @@ function ModelSection({ ai, providers, onChange }: { ai: Settings["ai"]; provide
           <Input value={ai.openaiBaseUrl} onChange={(e) => update({ ...ai, openaiBaseUrl: e.target.value })} placeholder={active.defaultBase} spellCheck={false} />
         </Field>
       )}
+      <p className="-mt-2 text-xs text-ink-3">
+        {active?.provider === "openai" && local ? (
+          "A model on this computer: no key needed. Blank model uses the first one it serves. Small models are slower and weaker, and grounding checks still catch what they make up."
+        ) : (
+          <>
+            A model on this computer needs no key:{" "}
+            <button type="button" className="text-brand hover:underline" onClick={() => update({ ...ai, provider: "openai", openaiBaseUrl: "http://localhost:11434/v1" })}>use Ollama</button> or{" "}
+            <button type="button" className="text-brand hover:underline" onClick={() => update({ ...ai, provider: "openai", openaiBaseUrl: "http://localhost:1234/v1" })}>LM Studio</button>.
+          </>
+        )}
+      </p>
 
-      {chosen && !chosen.hasKey && (
+      {chosen && !usable(chosen) && (
         <p className="flex items-start gap-2 text-sm text-warn">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
           <span>
@@ -104,7 +141,7 @@ function ModelSection({ ai, providers, onChange }: { ai: Settings["ai"]; provide
         {test.state === "error" && <span className="text-sm text-warn">{test.text}</span>}
         {test.state === "idle" && (
           <span className="text-xs text-ink-3">
-            {withKey.length ? `Sends a one-word request to ${active?.label}.` : "Add an API key above to use AI. Editing and PDFs work without it."}
+            {withKey.length ? `Sends a one-word request to ${activeLabel}.` : "Add an API key above to use AI. Editing and PDFs work without it."}
           </span>
         )}
       </div>

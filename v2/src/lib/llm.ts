@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { getKv, getSettings, setKv } from "./db";
+import { isLocalEndpoint } from "./format";
 import { PROVIDERS, type AiSettings, type Provider } from "./types";
 
 /**
@@ -78,30 +79,56 @@ export function providerStatus(env: Env = keyEnv(), raw: Env = process.env): Pro
   });
 }
 
+/** The OpenAI-compatible endpoint these settings call. */
+export const openaiBase = (ai: AiSettings, status: ProviderStatus[]) => ai.openaiBaseUrl.trim() || status.find((s) => s.provider === "openai")!.defaultBase;
+
+/** A provider can be called with a key, or without one when it's a model on this machine. */
+export const usable = (s: ProviderStatus, base: string) => s.hasKey || (s.provider === "openai" && isLocalEndpoint(base));
+
 /**
- * The provider to call: the chosen one if it has a key, else the first with a key
+ * The provider to call: the chosen one if it's usable, else the first that is
  * (Anthropic → Nebius → OpenAI), with a warning saying why the choice was skipped.
  */
 export function resolveLlm(ai: AiSettings, env: Env = keyEnv()): { config: LlmConfig | null; warning: string | null } {
   const status = providerStatus(env);
+  const local = openaiBase(ai, status);
+  const ok = (s: ProviderStatus) => usable(s, local);
   const chosen = ai.provider ? status.find((s) => s.provider === ai.provider)! : null;
-  const pick = chosen?.hasKey ? chosen : status.find((s) => s.hasKey);
-  const warning = chosen && !chosen.hasKey ? `${chosen.label} is selected but has no API key${pick ? `, so ${pick.label} is used instead` : ""}.` : null;
+  const pick = chosen && ok(chosen) ? chosen : status.find(ok);
+  const warning = chosen && !ok(chosen) ? `${chosen.label} is selected but has no API key${pick ? `, so ${pick.label} is used instead` : ""}.` : null;
   if (!pick) return { config: null, warning };
   const p = pick.provider;
-  const base = p === "openai" && ai.openaiBaseUrl.trim() ? ai.openaiBaseUrl.trim() : pick.defaultBase;
-  const label = p === "openai" && base !== PROVIDER_INFO.openai.defaultBase ? "OpenAI-compatible" : pick.label;
+  const base = p === "openai" ? local : pick.defaultBase;
+  const onMachine = p === "openai" && isLocalEndpoint(base);
+  const label = p !== "openai" || base === PROVIDER_INFO.openai.defaultBase ? pick.label : onMachine ? "Local" : "OpenAI-compatible";
   return {
-    config: { provider: p, label, key: env[PROVIDER_INFO[p].keyEnv]!.trim(), base: base.replace(/\/+$/, ""), model: ai.models[p].trim() || pick.defaultModel },
+    // A local server with no model chosen uses the first one it serves (see complete()).
+    config: { provider: p, label, key: env[PROVIDER_INFO[p].keyEnv]?.trim() ?? "", base: base.replace(/\/+$/, ""), model: ai.models[p].trim() || (onMachine ? "" : pick.defaultModel) },
     warning,
   };
 }
+
+async function modelsAt(c: LlmConfig): Promise<string[]> {
+  const res = await fetch(`${c.base}/models`, { headers: c.key ? { authorization: `Bearer ${c.key}` } : {}, signal: AbortSignal.timeout(5000) }).catch(() => null);
+  if (!res?.ok) return [];
+  const json = (await res.json().catch(() => null)) as { data?: { id?: string }[] } | null;
+  return (json?.data ?? []).map((m) => m.id ?? "").filter(Boolean).slice(0, 200);
+}
+
+/** The models an OpenAI-compatible endpoint serves (Ollama, LM Studio and OpenRouter list theirs), for the model field's suggestions. */
+export async function listModels(ai: AiSettings): Promise<string[]> {
+  const { config } = resolveLlm({ ...ai, provider: "openai" });
+  return config?.provider === "openai" ? modelsAt(config) : [];
+}
+
+// The model a local server picked when none was chosen, so documents record what wrote them.
+let served = "";
 
 const current = () => resolveLlm(getSettings().ai).config;
 
 export function llmInfo(): { provider: string; model: string } | null {
   const c = current();
-  return c ? { provider: c.label, model: c.model } : null;
+  return c ? { provider: c.label, model: c.model || served || "first model served" } : null;
 }
 
 export function llmConfigured() {
@@ -109,6 +136,9 @@ export function llmConfigured() {
 }
 
 const TIMEOUT_MS = 120_000;
+// A model on a laptop is slow: give it longer.
+const LOCAL_TIMEOUT_MS = 300_000;
+const timeoutOf = (c: LlmConfig) => (isLocalEndpoint(c.base) ? LOCAL_TIMEOUT_MS : TIMEOUT_MS);
 
 /** Pull a short human-readable message out of a provider error body instead of dumping it raw. */
 async function providerError(provider: string, res: Response): Promise<Error> {
@@ -142,25 +172,36 @@ async function complete(c: LlmConfig, system: string, user: string): Promise<str
     return json.content.map((x) => x.text ?? "").join("");
   }
 
-  const res = await fetch(`${c.base}/chat/completions`, {
-    method: "POST",
-    headers: { "content-type": "application/json", authorization: `Bearer ${c.key}` },
-    body: JSON.stringify({
-      model: c.model,
-      messages: [
-        { role: "system", content: system },
-        { role: "user", content: user },
-      ],
-      response_format: { type: "json_object" },
-    }),
-    signal: AbortSignal.timeout(TIMEOUT_MS),
-  });
+  const model = c.model || (served = (await modelsAt(c))[0] ?? "");
+  if (!model) throw new Error(`${c.base} serves no models. Pull one first (ollama pull qwen3.5:4b), or set the model in Settings.`);
+  const call = (jsonMode: boolean) =>
+    fetch(`${c.base}/chat/completions`, {
+      method: "POST",
+      headers: { "content-type": "application/json", ...(c.key ? { authorization: `Bearer ${c.key}` } : {}) },
+      body: JSON.stringify({
+        model,
+        messages: [
+          { role: "system", content: system },
+          { role: "user", content: user },
+        ],
+        ...(jsonMode ? { response_format: { type: "json_object" } } : {}),
+      }),
+      signal: AbortSignal.timeout(timeoutOf(c)),
+    }).catch((e: Error) => {
+      if (e.name === "TimeoutError") throw e;
+      throw new Error(`Can't reach ${c.base}.${isLocalEndpoint(c.base) ? " Is the model server (Ollama, LM Studio) running?" : ""}`);
+    });
+  let res = await call(true);
+  // Some servers reject JSON mode (LM Studio wants a schema); the prompt already asks for JSON, so ask again without it.
+  if (res.status === 400 && /response_format/i.test(await res.clone().text())) res = await call(false);
   if (!res.ok) throw await providerError(c.label, res);
   const json = (await res.json()) as { choices: { message: { content: string } }[] };
   return json.choices[0]?.message.content ?? "";
 }
 
 function extractJSON(text: string): unknown {
+  // Reasoning models (Qwen, DeepSeek) served locally can put their thinking, braces and all, before the answer.
+  text = text.replace(/<think>[\s\S]*?<\/think>/g, "");
   const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/);
   const body = fenced ? fenced[1] : text;
   const start = body.indexOf("{");
@@ -179,7 +220,7 @@ export async function generateJSON<T extends z.ZodTypeAny>(schema: T, system: st
     try {
       raw = await complete(config, sys, prompt);
     } catch (err) {
-      if ((err as Error).name === "TimeoutError") throw new Error(`The model didn't answer within ${TIMEOUT_MS / 1000}s. Try again.`);
+      if ((err as Error).name === "TimeoutError") throw new Error(`The model didn't answer within ${timeoutOf(config) / 1000}s. Try again.`);
       throw err;
     }
     try {

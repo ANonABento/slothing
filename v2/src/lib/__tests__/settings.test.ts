@@ -38,12 +38,22 @@ describe("resolveLlm", () => {
   });
 
   it("endpoint: a custom OpenAI base URL is labelled OpenAI-compatible and loses its trailing slash", () => {
-    const r = resolveLlm(ai({ openaiBaseUrl: "http://localhost:11434/v1/" }), { OPENAI_API_KEY: "o" });
-    expect(r.config).toMatchObject({ label: "OpenAI-compatible", base: "http://localhost:11434/v1" });
+    const r = resolveLlm(ai({ openaiBaseUrl: "https://openrouter.ai/api/v1/" }), { OPENAI_API_KEY: "o" });
+    expect(r.config).toMatchObject({ label: "OpenAI-compatible", base: "https://openrouter.ai/api/v1" });
   });
 
   it("ignores a blank key", () => {
     expect(resolveLlm(ai(), { ANTHROPIC_API_KEY: "  " }).config).toBeNull();
+  });
+
+  it("a model server on this machine needs no key; a remote endpoint still does", () => {
+    const local = resolveLlm(ai({ provider: "openai", openaiBaseUrl: "http://localhost:11434/v1" }), {});
+    expect(local.config).toMatchObject({ provider: "openai", label: "Local", key: "", base: "http://localhost:11434/v1", model: "" });
+    expect(resolveLlm(ai({ openaiBaseUrl: "http://127.0.0.1:1234/v1" }), {}).config?.provider).toBe("openai");
+    expect(resolveLlm(ai({ openaiBaseUrl: "https://openrouter.ai/api/v1" }), {}).config).toBeNull();
+    // A chosen local model keeps its name; a key elsewhere still comes first on Automatic.
+    expect(resolveLlm(ai({ openaiBaseUrl: "http://localhost:11434/v1", models: { anthropic: "", nebius: "", openai: "qwen3.5:4b" } }), { ANTHROPIC_API_KEY: "a" }).config?.provider).toBe("anthropic");
+    expect(resolveLlm(ai({ provider: "openai", openaiBaseUrl: "http://localhost:11434/v1", models: { anthropic: "", nebius: "", openai: "qwen3.5:4b" } }), {}).config?.model).toBe("qwen3.5:4b");
   });
 
   it("keys from Settings fill in where the environment has none, and the environment wins", () => {
