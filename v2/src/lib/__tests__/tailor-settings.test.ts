@@ -18,6 +18,7 @@ const job: Job = {
   description: "GraphQL, CI, TypeScript",
   status: "saved",
   notes: "",
+  lastSeenAt: null,
   createdAt: "",
   updatedAt: "",
 };

@@ -281,8 +281,8 @@ async function fromBoardApi(url: URL): Promise<{ job: ImportedJob | null; linked
   }
 }
 
-/** The posting in a page's HTML: its Greenhouse job, its JSON-LD, else AI on its text. */
-async function fromPage(url: URL, html: string, text: string, linkedInError: Error | null): Promise<ImportedJob> {
+/** The posting in a page's HTML: its Greenhouse job, its JSON-LD, else AI on its text (unless `ai` is false). */
+async function fromPage(url: URL, html: string, text: string, linkedInError: Error | null, ai = true): Promise<ImportedJob> {
   const embedded = embeddedGreenhouse(url, html);
   for (const board of embedded?.boards ?? []) {
     const job = await fromGreenhouse({ board, id: embedded!.id });
@@ -295,6 +295,7 @@ async function fromPage(url: URL, html: string, text: string, linkedInError: Err
   }
   // LinkedIn's page text is mostly sign-in prompts; better to say why than have AI guess.
   if (linkedInError) throw linkedInError;
+  if (!ai) throw new Error("No structured posting on this page.");
   return fromPageText(text, url.hostname);
 }
 
@@ -320,12 +321,18 @@ export async function importJobFromUrl(raw: string): Promise<ImportedJob & { url
  * A page open in your browser, sent by the extension: its rendered HTML and visible text. Nothing is
  * fetched except a board's API, so pages behind a login or built by JavaScript (Workday) read fine.
  */
-export async function importJobFromPage(page: { url: string; html: string; text: string }): Promise<ImportedJob & { url: string }> {
+export async function importJobFromPage(page: { url: string; html: string; text: string }, { ai = true } = {}): Promise<ImportedJob & { url: string }> {
   const url = parsePostingUrl(page.url);
   const { job, linkedInError } = await fromBoardApi(url);
   if (job) return { ...job, url: savedUrl(url) };
-  const read = await fromPage(url, page.html.slice(0, MAX_BYTES), page.text, linkedInError);
+  const read = await fromPage(url, page.html.slice(0, MAX_BYTES), page.text, linkedInError, ai);
   return { ...read, company: workdayCompany(url, read.company), url: savedUrl(url) };
+}
+
+/** "(3) Staff Engineer | Acme | LinkedIn" → title and company, for a posting LinkedIn won't serve us. */
+export function linkedInTitle(pageTitle: string): { title: string; company: string } | null {
+  const parts = pageTitle.replace(/^\(\d+\)\s*/, "").split(" | ").map((p) => p.trim());
+  return parts.length >= 3 && /^linkedin$/i.test(parts[parts.length - 1]) ? { title: parts[0], company: parts[1] } : null;
 }
 
 /**

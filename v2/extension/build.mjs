@@ -17,10 +17,16 @@ mkdirSync(out, { recursive: true });
 const manifest = JSON.parse(readFileSync(join(here, "manifest.json"), "utf8"));
 writeFileSync(join(out, "manifest.json"), JSON.stringify(manifest, null, 2));
 copyFileSync(join(root, "public/brand/slothing-mark.png"), join(out, "icon.png"));
-copyFileSync(join(here, "src/popup.html"), join(out, "popup.html"));
+copyFileSync(join(here, "src/panel.html"), join(out, "panel.html"));
 
 const options = {
-  entryPoints: { popup: join(here, "src/popup.tsx"), page: join(here, "src/page.ts"), pair: join(here, "src/pair.ts") },
+  entryPoints: {
+    panel: join(here, "src/panel.tsx"),
+    background: join(here, "src/background.ts"),
+    watch: join(here, "src/watch.ts"),
+    page: join(here, "src/page.ts"),
+    pair: join(here, "src/pair.ts"),
+  },
   outdir: out,
   bundle: true,
   format: "iife",
@@ -33,7 +39,7 @@ const options = {
   logLevel: "info",
 };
 
-const tailwind = ["-c", join(here, "tailwind.config.ts"), "-i", join(root, "src/app/globals.css"), "-o", join(out, "popup.css")];
+const tailwind = ["-c", join(here, "tailwind.config.ts"), "-i", join(root, "src/app/globals.css"), "-o", join(out, "panel.css")];
 const bin = join(root, "node_modules/.bin/tailwindcss");
 
 if (watch) {

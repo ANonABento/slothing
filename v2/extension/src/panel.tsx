@@ -1,4 +1,4 @@
-import { AlertTriangle, Check, ExternalLink, FileText, Loader2, MessageSquareText, Paperclip, PenLine, Plus, Sparkles, Wand2 } from "lucide-react";
+import { AlertTriangle, Check, ExternalLink, FileText, History, Loader2, MessageSquareText, Paperclip, PenLine, Plus, Send, Sparkles, Wand2 } from "lucide-react";
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 
@@ -6,6 +6,8 @@ import { Dropdown } from "@/components/dropdown";
 import { Button, Eyebrow, Input, buttonClass, cx } from "@/components/ui";
 import type { AnswerProposal, Fill, FormField, Skip } from "@/lib/autofill";
 import type { JobSummary } from "@/lib/extension";
+import { ago } from "@/lib/format";
+import { jobKey, tabKey, type TabState } from "./session";
 import {
   ApiError,
   activeTab,
@@ -24,9 +26,9 @@ import {
   type Tab,
 } from "./api";
 
-/* ─── The popup ───
- * One screen for the open tab: the job it belongs to (or Save job), and, when the page has a form,
- * Fill form → what was filled and what's left → Save answers to the bank.
+/* ─── The side panel ───
+ * Stays open beside the page and follows the tab you're on: the job it is (seen, saved, applied) with
+ * Save and Tailor, and, when the page has a form, Fill form → what's left → Save answers / Mark applied.
  */
 
 /** Apps that render their form after load (Ashby) get a moment before "no form" is believed. */
@@ -39,7 +41,7 @@ async function readFormSoon(tab: Tab): Promise<PageForm> {
   return form;
 }
 
-type Loaded = { conn: Connection; tab: Tab; status: Status; form: PageForm | null; formError: string; looking: boolean };
+type Loaded = { conn: Connection; tab: Tab; status: Status; form: PageForm | null; formError: string; looking: boolean; before: string | null };
 
 type FillResult = {
   filled: { id: string; source: Fill["source"] | "ai"; label: string }[];
@@ -67,14 +69,19 @@ function App() {
     if (!tab) return setState({ kind: "error", error: "No tab to work with.", conn });
     try {
       const readable = /^https?:/.test(tab.url);
+      // What the background worker knows about this tab: the job it's applying for, when you'd seen it.
+      const session = (await chrome.storage.session.get([jobKey(tab.id), tabKey(tab.id)])) as Record<string, unknown>;
+      const remembered = session[jobKey(tab.id)] as string | undefined;
+      const tabState = session[tabKey(tab.id)] as TabState | undefined;
       const [status, form] = await Promise.all([
-        api.status(conn, tab.url),
+        api.status(conn, tab.url, remembered),
         readable ? readForm(tab).then((f) => ({ f, e: "" }), (e: Error) => ({ f: null, e: e.message })) : Promise.resolve({ f: null, e: "Slothing can't read this kind of page." }),
       ]);
       applyTheme(status.theme);
       void chrome.storage.local.set({ theme: status.theme });
       const late = readable && form.f && !form.f.fields.length && !form.f.blockedFrames;
-      setState({ kind: "ready", conn, tab, status, form: form.f, formError: form.e, looking: Boolean(late) });
+      const before = tabState?.url === tab.url ? tabState.before : null;
+      setState({ kind: "ready", conn, tab, status, form: form.f, formError: form.e, looking: Boolean(late), before });
       // A form some apps render after load (Ashby): keep looking a moment, without holding up the rest.
       if (late) {
         const again = await readFormSoon(tab).catch(() => null);
@@ -89,10 +96,31 @@ function App() {
   useEffect(() => {
     void chrome.storage.local.get("theme").then(({ theme }) => theme && applyTheme(theme as Status["theme"]));
     void load();
+    // Follow the tab you're on: switching tabs, a new page in this one, or the background learning more.
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const soon = () => {
+      clearTimeout(timer);
+      timer = setTimeout(load, 250);
+    };
+    const onActivated = () => soon();
+    const onUpdated = (_id: number, info: { url?: string; status?: string }, t: chrome.tabs.Tab) => t.active && (info.url || info.status === "complete") && soon();
+    const onMessage = (msg: { type?: string; tabId?: number }) => {
+      if (msg?.type === "tab-state") void activeTab().then((t) => t?.id === msg.tabId && soon());
+    };
+    // A panel opened as a page for testing (?tab=) follows only its tab.
+    const pinned = new URLSearchParams(location.search).has("tab");
+    if (!pinned) chrome.tabs.onActivated.addListener(onActivated);
+    chrome.tabs.onUpdated.addListener(onUpdated);
+    chrome.runtime.onMessage.addListener(onMessage);
+    return () => {
+      chrome.tabs.onActivated.removeListener(onActivated);
+      chrome.tabs.onUpdated.removeListener(onUpdated);
+      chrome.runtime.onMessage.removeListener(onMessage);
+    };
   }, [load]);
 
   return (
-    <div className="flex max-h-[590px] min-h-[200px] w-[380px] flex-col bg-page text-ink">
+    <div className="flex h-screen min-w-[300px] flex-col bg-page text-ink">
       <header className="flex h-12 shrink-0 items-center gap-2 border-b border-rule bg-header px-4">
         <img src="icon.png" alt="" className="h-6 w-6 rounded-control" />
         <div className="font-display text-base font-bold tracking-tight">Slothing</div>
@@ -119,7 +147,8 @@ function App() {
             </div>
           </div>
         )}
-        {state.kind === "ready" && <Main {...state} reload={load} disconnect={() => setConnection(null).then(() => setState({ kind: "connect" }))} />}
+        {/* Keyed by tab and page, so a new page starts fresh (no fill results from the last one). */}
+        {state.kind === "ready" && <Main key={`${state.tab.id}:${state.tab.url}`} {...state} reload={load} disconnect={() => setConnection(null).then(() => setState({ kind: "connect" }))} />}
       </div>
     </div>
   );
@@ -157,20 +186,32 @@ function Connect({ error, onConnected }: { error?: string; onConnected: () => vo
 
 /* ─── The open tab ─── */
 
-function Main({ conn, tab, status, form, formError, looking, reload, disconnect }: Loaded & { reload: () => void; disconnect: () => void }) {
-  const [job, setJob] = useState<JobSummary | null>(status.job);
+function Main({ conn, tab, status, form, formError, looking, before, reload, disconnect }: Loaded & { reload: () => void; disconnect: () => void }) {
+  const [job, setJobState] = useState<JobSummary | null>(status.job);
   const [view, setView] = useState<"main" | "save">("main");
   const hasForm = Boolean(form?.fields.length);
   const open = (path: string) => chrome.tabs.create({ url: `${conn.server}${path}` });
+  // The background may learn the job after the panel opened (it records the posting as seen).
+  useEffect(() => {
+    if (status.job) setJobState(status.job);
+  }, [status.job]);
+  // On a form, the job you pick is remembered for this tab, so the next step of the form knows it too.
+  const setJob = (j: JobSummary | null) => {
+    setJobState(j);
+    if (j) void chrome.runtime.sendMessage({ type: "job-changed", tabId: tab.id, job: j }).catch(() => {});
+    if (!hasForm) return;
+    if (j) void chrome.storage.session.set({ [jobKey(tab.id)]: j.id });
+    else void chrome.storage.session.remove(jobKey(tab.id));
+  };
 
   return (
     <>
       {view === "main" ? (
         <div className="space-y-px bg-rule">
-          <JobSection conn={conn} tab={tab} status={status} job={job} setJob={setJob} hasForm={hasForm} open={open} />
+          <JobSection conn={conn} tab={tab} status={status} job={job} setJob={setJob} hasForm={hasForm} before={before} open={open} />
           {form && (form.fields.length > 0 || form.combos > 0) ? (
-            <FormSection conn={conn} tab={tab} form={form} job={job} llm={status.llm} onSaveAnswers={() => setView("save")} open={open} />
-          ) : (
+            <FormSection conn={conn} tab={tab} form={form} job={job} setJob={setJob} llm={status.llm} onSaveAnswers={() => setView("save")} open={open} />
+          ) : job && !form?.blockedFrames && !formError ? null : (
             <Section>
               <p className="text-xs leading-relaxed text-ink-3">
                 {looking ? "Looking for an application form…" : formError || (form?.blockedFrames ? "" : "No application form on this page. Open the application to fill it.")}
@@ -182,9 +223,12 @@ function Main({ conn, tab, status, form, formError, looking, reload, disconnect 
       ) : (
         <SaveAnswers conn={conn} tab={tab} onDone={() => setView("main")} />
       )}
-      <footer className="flex items-center gap-1 border-t border-rule px-2 py-1.5">
+      <footer className="mt-auto flex flex-wrap items-center gap-1 border-t border-rule px-2 py-1.5">
         <button onClick={() => open("/answers")} className={buttonClass("ghost", "sm")}>
-          <MessageSquareText className="h-3.5 w-3.5" /> Answer bank · {status.answers}
+          <MessageSquareText className="h-3.5 w-3.5" /> Answers · {status.answers}
+        </button>
+        <button onClick={() => open("/?view=seen")} className={buttonClass("ghost", "sm")} title={status.autoSave ? "Postings you open are recorded under Jobs → Seen" : "Recording postings is off (Extension page)"}>
+          <History className="h-3.5 w-3.5" /> {status.autoSave ? "History" : "History off"}
         </button>
         <button onClick={disconnect} className={buttonClass("ghost", "sm", "ml-auto text-ink-3")}>Disconnect</button>
       </footer>
@@ -219,6 +263,16 @@ function Notice({ tone, children }: { tone: "warn" | "ok" | "plain"; children: R
   );
 }
 
+const STATUS_LABEL: Record<JobSummary["status"], string> = {
+  seen: "Seen",
+  saved: "In your jobs",
+  applied: "Applied",
+  interviewing: "Interviewing",
+  offer: "Offer",
+  rejected: "Rejected",
+  archived: "Archived",
+};
+
 function JobSection({
   conn,
   tab,
@@ -226,6 +280,7 @@ function JobSection({
   job,
   setJob,
   hasForm,
+  before,
   open,
 }: {
   conn: Connection;
@@ -234,41 +289,73 @@ function JobSection({
   job: JobSummary | null;
   setJob: (j: JobSummary | null) => void;
   hasForm: boolean;
+  before: string | null;
   open: (path: string) => void;
 }) {
-  const [saving, setSaving] = useState(false);
+  const [busy, setBusy] = useState<"" | "save" | "tailor-ai" | "tailor">("");
   const [error, setError] = useState("");
-  const [justSaved, setJustSaved] = useState<boolean | null>(null);
+  const [note, setNote] = useState("");
 
-  const save = async () => {
-    setSaving(true);
+  const run = async (kind: typeof busy, fn: () => Promise<JobSummary>, done: string) => {
+    setBusy(kind);
     setError("");
+    setNote("");
     try {
-      const r = await api.saveJob(conn, await readPosting(tab));
-      setJob(r.job);
-      setJustSaved(r.created);
+      setJob(await fn());
+      setNote(done);
     } catch (e) {
       setError((e as Error).message);
     }
-    setSaving(false);
+    setBusy("");
   };
+  const save = () => run("save", async () => (await api.saveJob(conn, await readPosting(tab))).job, "Saved to your jobs.");
+  const tailor = (ai: boolean) => run(ai ? "tailor-ai" : "tailor", async () => (await api.tailor(conn, job!.id, ai)).job, "Resume tailored. Open the job to review it.");
 
   if (job) {
+    const seen = job.status === "seen";
+    const eyebrow = seen ? (before ? `Seen before · ${ago(before).toLowerCase()}` : "New · added to your history") : job.appliedAt ? `Applied · ${ago(job.appliedAt).toLowerCase()}` : STATUS_LABEL[job.status];
     return (
-      <Section title={justSaved ? "Saved to your jobs" : justSaved === false ? "Already in your jobs" : "This job"}>
+      <Section title={eyebrow}>
         <div className="flex items-start gap-3">
           <div className="min-w-0 flex-1">
-            <div className="truncate font-display text-base font-semibold leading-snug tracking-tight">{job.title || "Untitled role"}</div>
+            <div className="line-clamp-2 font-display text-base font-semibold leading-snug tracking-tight">{job.title || "Untitled role"}</div>
             <div className="truncate text-sm text-ink-2">{job.company || "Unknown company"}</div>
           </div>
           <Button size="sm" variant="secondary" onClick={() => open(`/jobs/${job.id}`)}>Open</Button>
         </div>
-        <div className="flex flex-wrap gap-1.5">
-          <DocChip ok={job.resume} label="Resume" />
-          <DocChip ok={job.letter} label="Cover letter" />
-          {!job.resume && <span className="text-xs text-ink-3">Tailor it in Slothing to attach it here.</span>}
-        </div>
-        {!status.job && !justSaved && (
+        {seen ? (
+          <>
+            <Button variant="primary" onClick={save} disabled={busy !== ""} className="w-full">
+              {busy === "save" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+              {busy === "save" ? "Saving…" : "Save to my jobs"}
+            </Button>
+            <p className="text-xs leading-relaxed text-ink-3">It&apos;s in your history (Jobs → Seen). Save it to tailor a resume and apply.</p>
+          </>
+        ) : (
+          <>
+            <div className="flex flex-wrap items-center gap-1.5">
+              <DocChip ok={job.resume} label="Resume" />
+              <DocChip ok={job.letter} label="Cover letter" />
+            </div>
+            {!job.resume && job.described && (
+              <div className="flex gap-2">
+                <Button variant="primary" size="sm" onClick={() => tailor(status.llm)} disabled={busy !== ""} className="flex-1">
+                  {busy.startsWith("tailor") ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : status.llm ? <Sparkles className="h-3.5 w-3.5" /> : <Wand2 className="h-3.5 w-3.5" />}
+                  {busy.startsWith("tailor") ? "Tailoring…" : status.llm ? "Tailor resume" : "Tailor without AI"}
+                </Button>
+                {status.llm && (
+                  <Button variant="ghost" size="sm" onClick={() => tailor(false)} disabled={busy !== ""} title="Pick and fit your bullets by relevance, no AI">
+                    Without AI
+                  </Button>
+                )}
+              </div>
+            )}
+            {busy === "tailor-ai" && <p className="text-xs text-ink-3">AI tailoring takes up to a minute.</p>}
+          </>
+        )}
+        {note && <Notice tone="ok">{note}</Notice>}
+        {error && <Notice tone="warn">{error}</Notice>}
+        {hasForm && !status.job && (
           <button onClick={() => setJob(null)} className="text-xs text-ink-3 underline-offset-2 hover:text-ink hover:underline">Not this job</button>
         )}
       </Section>
@@ -279,7 +366,7 @@ function JobSection({
     <Dropdown
       label="The job this application is for"
       value={null}
-      placeholder="Pick a saved job"
+      placeholder="Pick a job"
       options={status.recent.map((j) => ({ value: j.id, label: `${j.title || "Untitled"} · ${j.company || "?"}`, text: `${j.title} ${j.company}` }))}
       onChange={(id) => setJob(status.recent.find((j) => j.id === id) ?? null)}
       className="w-full"
@@ -290,17 +377,15 @@ function JobSection({
     <Section title={hasForm ? "Applying for" : "Job"}>
       {hasForm && (
         <>
-          <p className="text-xs leading-relaxed text-ink-3">Pick the job this form is for, so its tailored resume can be attached.</p>
+          <p className="text-xs leading-relaxed text-ink-3">Pick the job this form is for, so its tailored resume is attached and the application is recorded.</p>
           {picker}
         </>
       )}
-      <div className="flex items-center gap-2">
-        <Button size={hasForm ? "sm" : "md"} variant={hasForm ? "ghost" : "primary"} onClick={save} disabled={saving} className={hasForm ? "" : "w-full"}>
-          {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-          {saving ? "Reading the posting…" : hasForm ? "Save this page as a job" : "Save job"}
-        </Button>
-      </div>
-      {!hasForm && !saving && <p className="text-xs leading-relaxed text-ink-3">Reads this posting: title, company, location and the full description.</p>}
+      <Button size={hasForm ? "sm" : "md"} variant={hasForm ? "ghost" : "primary"} onClick={save} disabled={busy !== ""} className={hasForm ? "" : "w-full"}>
+        {busy === "save" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+        {busy === "save" ? "Reading the posting…" : hasForm ? "Save this page as a job" : "Save job"}
+      </Button>
+      {!hasForm && busy === "" && <p className="text-xs leading-relaxed text-ink-3">Reads this page as a posting: title, company, location and the full description.</p>}
       {error && <Notice tone="warn">{error}</Notice>}
     </Section>
   );
@@ -332,6 +417,7 @@ function FormSection({
   tab,
   form,
   job,
+  setJob,
   llm,
   onSaveAnswers,
   open,
@@ -340,6 +426,7 @@ function FormSection({
   tab: Tab;
   form: PageForm;
   job: JobSummary | null;
+  setJob: (j: JobSummary | null) => void;
   llm: boolean;
   onSaveAnswers: () => void;
   open: (path: string) => void;
@@ -477,12 +564,42 @@ function FormSection({
         </div>
       )}
       {error && <Notice tone="warn">{error}</Notice>}
-      <div className="border-t border-rule pt-3">
+      <div className="space-y-2 border-t border-rule pt-3">
         <Button variant="secondary" size="sm" onClick={onSaveAnswers} className="w-full">
           <PenLine className="h-3.5 w-3.5" /> Save my answers to the bank
         </Button>
+        {job && <MarkApplied conn={conn} tab={tab} job={job} setJob={setJob} />}
       </div>
     </Section>
+  );
+}
+
+/**
+ * Submitting a form Slothing filled marks the job applied by itself (the page watcher sees the
+ * submit). This is for everything else: a form it didn't fill, or a submit it missed.
+ */
+function MarkApplied({ conn, tab, job, setJob }: { conn: Connection; tab: Tab; job: JobSummary; setJob: (j: JobSummary) => void }) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  if (job.appliedAt) return <p className="flex items-center gap-1.5 text-xs text-ink-3"><Check className="h-3.5 w-3.5 text-ok" /> Applied {ago(job.appliedAt).toLowerCase()}. What you sent is on the job page.</p>;
+  const mark = async () => {
+    setBusy(true);
+    setError("");
+    try {
+      const { fields } = await readForm(tab);
+      setJob((await api.applied(conn, { jobId: job.id, url: tab.url, fields })).job);
+    } catch (e) {
+      setError((e as Error).message);
+    }
+    setBusy(false);
+  };
+  return (
+    <>
+      <Button variant="ghost" size="sm" onClick={mark} disabled={busy} className="w-full" title="Records what's on the form now, and moves the job to Applied">
+        <Send className="h-3.5 w-3.5" /> {busy ? "Saving…" : "I submitted it: mark applied"}
+      </Button>
+      {error && <Notice tone="warn">{error}</Notice>}
+    </>
   );
 }
 

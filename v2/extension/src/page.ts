@@ -156,7 +156,7 @@ const tag = (el: Element) => {
 };
 
 /** Every fillable field in this frame, in page order. `combos` counts the searchable dropdowns among them. */
-function read(): { fields: FormField[]; combos: number; frames: number } {
+export function read(): { fields: FormField[]; combos: number; frames: number } {
   const fields: FormField[] = [];
   const radios = new Map<string, HTMLInputElement[]>();
   let combos = 0;

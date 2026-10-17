@@ -1,9 +1,9 @@
 "use client";
 
-import { Check, Copy, MessageSquareText, Plus, Puzzle, RotateCcw, Wand2 } from "lucide-react";
+import { Check, Copy, History, MessageSquareText, Plus, Puzzle, RotateCcw, Send, Wand2 } from "lucide-react";
 import { useEffect, useRef, useState, useTransition, type ReactNode } from "react";
 
-import { resetExtensionKeyAction } from "@/app/actions";
+import { resetExtensionKeyAction, setAutoSaveAction } from "@/app/actions";
 import { ago } from "@/lib/format";
 import { safe } from "@/lib/safe";
 import { useConfirm } from "./confirm";
@@ -44,7 +44,31 @@ function Step({ n, done, title, children }: { n: number; done: boolean; title: s
   );
 }
 
-export function ExtensionSetup({ connectionKey, seen, dist, built }: { connectionKey: string; seen: { at: string; version: string } | null; dist: string; built: string | null }) {
+export function ExtensionSetup({
+  connectionKey,
+  seen,
+  dist,
+  built,
+  autoSave,
+}: {
+  connectionKey: string;
+  seen: { at: string; version: string } | null;
+  dist: string;
+  built: string | null;
+  autoSave: boolean;
+}) {
+  const [autoSaveOn, setAutoSaveOn] = useState(autoSave);
+  const [savingAuto, startAuto] = useTransition();
+  const toggleAutoSave = (on: boolean) => {
+    setAutoSaveOn(on);
+    startAuto(async () => {
+      const res = await safe(() => setAutoSaveAction(on));
+      if (!res.ok) {
+        setAutoSaveOn(!on);
+        setError(res.error);
+      }
+    });
+  };
   const [detected, setDetected] = useState<Detected>(null);
   const [looked, setLooked] = useState(false);
   // Set when the extension confirms a connect from this page. Otherwise a call since the last key reset proves it.
@@ -89,7 +113,7 @@ export function ExtensionSetup({ connectionKey, seen, dist, built }: { connectio
   return (
     <>
       {dialog}
-      <PageHeader icon={Puzzle} title="Extension" description="Save postings and fill applications from your browser, with your profile and answer bank." />
+      <PageHeader icon={Puzzle} title="Extension" description="Notices postings and forms as you browse; saves, tailors and fills from a panel beside the page." />
       <PageBody>
         <div className="mx-auto grid max-w-5xl grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
           <Card className="p-5">
@@ -112,7 +136,7 @@ export function ExtensionSetup({ connectionKey, seen, dist, built }: { connectio
               <Step n={3} done={connected} title={connected ? "Connected" : "Connect it to this app"}>
                 {connected ? (
                   <p className="text-sm text-ink-2">
-                    {seen ? `Last used ${ago(seen.at).toLowerCase()}.` : "Ready."} Open a job posting or an application and click the Slothing icon (or press{" "}
+                    {seen ? `Last used ${ago(seen.at).toLowerCase()}.` : "Ready."} Click the Slothing icon to open its panel beside the page (or press{" "}
                     <kbd className="rounded-chip border border-rule bg-page px-1 font-mono text-xs">Alt</kbd>+<kbd className="rounded-chip border border-rule bg-page px-1 font-mono text-xs">Shift</kbd>+<kbd className="rounded-chip border border-rule bg-page px-1 font-mono text-xs">S</kbd>).
                   </p>
                 ) : (
@@ -137,25 +161,44 @@ export function ExtensionSetup({ connectionKey, seen, dist, built }: { connectio
             </ol>
           </Card>
 
-          <Card className="p-5">
-            <Eyebrow className="mb-1">Using it</Eyebrow>
-            <CardTitle className="mb-4">One button, three jobs</CardTitle>
-            <ul className="space-y-4 text-sm">
-              <Use icon={Plus} title="Save job">On a posting, saves its title, company and full description to Jobs. Works on pages behind a login and ones built with JavaScript (Workday), since it reads what you see.</Use>
-              <Use icon={Wand2} title="Fill form">
-                On an application: name, email, phone and links from your profile, other questions from your answer bank, and this job&apos;s tailored resume and cover letter attached as PDFs.
-                Fields you filled are left alone, and nothing is ever submitted.
-              </Use>
-              <Use icon={MessageSquareText} title="Save my answers">After you answer new questions on a form, saves them to your answer bank, so the next form that asks gets them filled in.</Use>
-            </ul>
-            <p className="mt-5 border-t border-rule pt-4 text-xs leading-5 text-ink-3">
-              The extension reads a page only when you click its button, and talks only to this app. Questions without a saved answer can be drafted by AI from your profile, on request.
-            </p>
-          </Card>
+          <div className="space-y-4">
+            <Card className="p-5">
+              <Eyebrow className="mb-1">Using it</Eyebrow>
+              <CardTitle className="mb-1">A panel beside the page</CardTitle>
+              <p className="mb-4 text-sm text-ink-2">Click the icon to open it. It stays open and follows the tab you&apos;re on. The badge on the icon says what a page is.</p>
+              <ul className="space-y-4 text-sm">
+                <Use icon={History} title="Notices postings">
+                  A posting you open is added to Jobs → Seen, so you have a history and know when you&apos;ve read one before (badge <Badge>New</Badge> or <Badge>Seen</Badge>).
+                  Only postings with structured data are recorded, never by AI.
+                </Use>
+                <Use icon={Plus} title="Save, then tailor">Save a posting to your jobs and tailor its resume from the panel, without leaving the page.</Use>
+                <Use icon={Wand2} title="Fill form">
+                  On an application (badge <Badge>Fill</Badge>): your profile, your answer bank, and this job&apos;s tailored resume and letter attached. Fields you filled are left alone. It never submits.
+                </Use>
+                <Use icon={Send} title="Applied">When you submit a form it filled, the job moves to Applied and the job page keeps what you sent (badge <Badge>Sent</Badge>).</Use>
+                <Use icon={MessageSquareText} title="Save my answers">New answers you typed on a form go to your answer bank, for the next form that asks.</Use>
+              </ul>
+            </Card>
+            <Card className="p-5">
+              <label className="flex cursor-pointer items-start gap-3">
+                <input type="checkbox" checked={autoSaveOn} onChange={(e) => toggleAutoSave(e.target.checked)} disabled={savingAuto} className="mt-1 accent-[var(--brand)]" />
+                <span>
+                  <span className="block text-sm font-medium">Record postings I open</span>
+                  <span className="block text-xs leading-5 text-ink-3">
+                    The extension sees every page so it can tell postings from forms; it sends nothing for other pages. Off: postings are only saved when you click Save.
+                  </span>
+                </span>
+              </label>
+            </Card>
+          </div>
         </div>
       </PageBody>
     </>
   );
+}
+
+function Badge({ children }: { children: ReactNode }) {
+  return <span className="rounded-chip bg-brand px-1 font-mono text-[10px] font-semibold text-paper">{children}</span>;
 }
 
 function Use({ icon: Icon, title, children }: { icon: typeof Plus; title: string; children: ReactNode }) {

@@ -122,7 +122,8 @@ export type Bullet = z.infer<typeof Bullet>;
 
 /* ─── Jobs ─── */
 
-export const JOB_STATUSES = ["saved", "applied", "interviewing", "offer", "rejected", "archived"] as const;
+/** "seen": a posting you opened, recorded by the extension. Your history, not your list: Save makes it "saved". */
+export const JOB_STATUSES = ["seen", "saved", "applied", "interviewing", "offer", "rejected", "archived"] as const;
 export type JobStatus = (typeof JOB_STATUSES)[number];
 
 export interface Job {
@@ -134,8 +135,23 @@ export interface Job {
   description: string;
   status: JobStatus;
   notes: string;
+  /** When the extension last saw you open the posting. */
+  lastSeenAt: string | null;
   createdAt: string;
   updatedAt: string;
+}
+
+/** What you sent with an application: recorded when you submit a form the extension filled, or mark it applied. */
+export interface Application {
+  id: string;
+  jobId: string;
+  /** The form's page. */
+  url: string;
+  answers: { question: string; answer: string }[];
+  /** The resume and letter versions current at the time, so History can show exactly what was sent. */
+  resumeVersion: string | null;
+  letterVersion: string | null;
+  submittedAt: string;
 }
 
 /* ─── Answer bank: your answers to application questions, reused by the extension's form fill ─── */
@@ -412,6 +428,12 @@ export const Settings = z.object({
       dark: z.enum(DARK_THEMES).default("graphite"),
     })
     .default({ mode: "light", light: "cream", dark: "graphite" }),
+  extension: z
+    .object({
+      /** Record postings you open as "seen" (only ones with structured data; never AI). */
+      autoSave: z.boolean().default(true),
+    })
+    .default({ autoSave: true }),
 });
 export type Settings = z.infer<typeof Settings>;
 export type AiSettings = Settings["ai"];

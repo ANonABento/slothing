@@ -3,10 +3,11 @@ import { z } from "zod";
 
 import { FormField, planFill, proposeAnswers, type AnswerProposal, type Fill, type Skip } from "./autofill";
 import * as db from "./db";
-import { importJobFromPage, postingKey } from "./job-import";
+import { importJobFromPage, linkedInJobId, linkedInTitle, parsePostingUrl, postingKey } from "./job-import";
 import { llmConfigured } from "./llm";
 import { draftAnswers, type DraftAnswer } from "./tailor";
-import type { Job } from "./types";
+import { tailorJob } from "./tailor-job";
+import type { Job, JobStatus } from "./types";
 
 /* ─── The browser extension's API ───
  * The extension calls these from its popup (never from a web page): it holds a key, shown on the
@@ -60,9 +61,14 @@ export interface JobSummary {
   id: string;
   title: string;
   company: string;
-  status: string;
+  status: JobStatus;
   resume: boolean;
   letter: boolean;
+  /** Whether there's a description to tailor from (a LinkedIn posting seen in passing may not have one). */
+  described: boolean;
+  lastSeenAt: string | null;
+  /** The last application recorded for it. */
+  appliedAt: string | null;
 }
 
 const summary = (j: Job): JobSummary => ({
@@ -72,6 +78,9 @@ const summary = (j: Job): JobSummary => ({
   status: j.status,
   resume: Boolean(db.getDoc(j.id, "resume")),
   letter: Boolean(db.getDoc(j.id, "cover_letter")),
+  described: Boolean(j.description.trim()),
+  lastSeenAt: j.lastSeenAt,
+  appliedAt: db.listApplications(j.id)[0]?.submittedAt ?? null,
 });
 
 /** The saved job a page belongs to: the posting itself, or its application form. */
@@ -80,41 +89,114 @@ export function jobForUrl(url: string): Job | null {
   return key ? (db.listJobs().find((j) => j.url && postingKey(j.url) === key) ?? null) : null;
 }
 
-const Status = z.object({ url: z.string().default("") });
+const Status = z.object({ url: z.string().default(""), jobId: z.string().optional() });
 
 export function status(input: unknown) {
-  const { url } = Status.parse(input);
+  const { url, jobId } = Status.parse(input);
   const profile = db.getProfile();
   const { appearance } = db.getSettings();
-  const job = url ? jobForUrl(url) : null;
+  const job = (url ? jobForUrl(url) : null) ?? (jobId ? db.getJob(jobId) : null);
   return {
     profile: { name: profile.contact.name.split(",")[0].trim(), ready: Boolean(profile.contact.name || profile.experience.length) },
     job: job ? summary(job) : null,
     // To pick from when the page isn't a saved posting (an application form on another domain).
     recent: db
       .listJobs()
-      .filter((j) => j.status === "saved" || j.status === "applied")
+      .filter((j) => j.status === "seen" || j.status === "saved" || j.status === "applied")
+      .sort((a, b) => (b.lastSeenAt ?? b.updatedAt).localeCompare(a.lastSeenAt ?? a.updatedAt))
       .slice(0, 15)
       .map(summary),
     answers: db.listAnswers().filter((a) => a.answer.trim()).length,
     llm: llmConfigured(),
     theme: appearance,
+    autoSave: db.getSettings().extension.autoSave,
   };
 }
 
 const PageInput = z.object({ url: z.string().min(1), html: z.string().default(""), text: z.string().default("") });
 
-/** Save the posting open in the browser, or return the job it already is. */
+/** Save the posting open in the browser, or return the job it already is. A "seen" job becomes saved. */
 export async function saveJob(input: unknown): Promise<{ job: JobSummary; created: boolean }> {
   const page = PageInput.parse(input);
   const existing = jobForUrl(page.url);
-  if (existing) return { job: summary(existing), created: false };
+  if (existing && existing.status !== "seen") return { job: summary(existing), created: false };
+  if (existing) {
+    // Seen in passing without a description (LinkedIn): read it properly now that you want it.
+    if (!existing.description.trim()) {
+      const read = await importJobFromPage(page);
+      db.updateJob(existing.id, { title: read.title || existing.title, company: read.company || existing.company, location: read.location, description: read.description });
+    }
+    db.setJobStatus(existing.id, "saved");
+    return { job: summary(db.getJob(existing.id)!), created: true };
+  }
   const read = await importJobFromPage(page);
   // A posting saved from its form ("…/apply") keeps the posting's link.
   const again = jobForUrl(read.url);
-  if (again) return { job: summary(again), created: false };
+  if (again) {
+    if (again.status === "seen") db.setJobStatus(again.id, "saved");
+    return { job: summary(db.getJob(again.id)!), created: again.status === "seen" };
+  }
   const id = db.createJob(read);
   return { job: summary(db.getJob(id)!), created: true };
+}
+
+const SeenInput = PageInput.extend({ title: z.string().default("") });
+
+/**
+ * You opened a posting (the extension's page watcher). A job you have gets its "last seen" time; a new
+ * one is recorded as seen when auto-save is on. Only structured data is read, never AI: this runs for
+ * every posting you open. `before` is when you'd last seen it, so the extension can say "seen before".
+ */
+export async function seen(input: unknown): Promise<{ job: JobSummary | null; before: string | null }> {
+  const page = SeenInput.parse(input);
+  const existing = jobForUrl(page.url);
+  if (existing) {
+    db.touchSeen(existing.id);
+    return { job: summary(db.getJob(existing.id)!), before: existing.lastSeenAt ?? existing.createdAt };
+  }
+  if (!db.getSettings().extension.autoSave) return { job: null, before: null };
+  let read;
+  try {
+    read = await importJobFromPage(page, { ai: false });
+  } catch {
+    // LinkedIn limits its guest reads; its page title still says what and where, enough for history.
+    const li = linkedInJobId(parsePostingUrl(page.url)) && linkedInTitle(page.title);
+    if (!li) return { job: null, before: null };
+    read = { ...li, location: "", description: "", url: `https://www.linkedin.com/jobs/view/${linkedInJobId(parsePostingUrl(page.url))}` };
+  }
+  const again = jobForUrl(read.url);
+  if (again) {
+    db.touchSeen(again.id);
+    return { job: summary(db.getJob(again.id)!), before: again.lastSeenAt ?? again.createdAt };
+  }
+  const id = db.createJob(read, "seen");
+  return { job: summary(db.getJob(id)!), before: null };
+}
+
+const TailorInput = z.object({ jobId: z.string(), ai: z.boolean() });
+
+export async function tailor(input: unknown): Promise<{ job: JobSummary }> {
+  const { jobId, ai } = TailorInput.parse(input);
+  await tailorJob(jobId, ai);
+  const job = db.getJob(jobId)!;
+  if (job.status === "seen") db.setJobStatus(jobId, "saved");
+  return { job: summary(db.getJob(jobId)!) };
+}
+
+const AppliedInput = z.object({ jobId: z.string(), url: z.string().default(""), fields: z.array(FormField).max(400).default([]) });
+
+/**
+ * You submitted the application (or said so). Records what the form said (questions you answered, not
+ * the identity fields) and the resume and letter versions, and moves the job to applied.
+ */
+export function applied(input: unknown): { job: JobSummary } {
+  const { jobId, url, fields } = AppliedInput.parse(input);
+  const job = db.getJob(jobId);
+  if (!job) throw new Error("Job not found");
+  const answers = fields.filter((f) => f.kind !== "file" && f.label.trim() && f.value.trim()).map((f) => ({ question: f.label.trim(), answer: f.value.trim() }));
+  db.recordApplication(jobId, url, answers);
+  if (job.status === "seen" || job.status === "saved") db.setJobStatus(jobId, "applied");
+  return { job: summary(db.getJob(jobId)!) };
 }
 
 const FillInput = z.object({ jobId: z.string().optional(), fields: z.array(FormField).max(400) });

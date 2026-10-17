@@ -14,18 +14,23 @@ export const dynamic = "force-dynamic";
 
 const VIEWS = [
   { value: "active", label: "Active" },
+  { value: "seen", label: "Seen" },
   { value: "closed", label: "Closed" },
   { value: "all", label: "All" },
 ] as const;
 type View = (typeof VIEWS)[number]["value"];
 
 const isClosed = (j: Job) => j.status === "rejected" || j.status === "archived";
+const inView = (j: Job, view: View) =>
+  view === "all" ? true : view === "seen" ? j.status === "seen" : view === "closed" ? isClosed(j) : j.status !== "seen" && !isClosed(j);
 
 export default async function JobsPage({ searchParams }: { searchParams: Promise<{ view?: string }> }) {
   const requested = (await searchParams).view;
   const view: View = VIEWS.find((v) => v.value === requested)?.value ?? "active";
   const jobs = listJobs();
-  const shown = jobs.filter((j) => (view === "all" ? true : view === "closed" ? isClosed(j) : !isClosed(j)));
+  // Seen: postings you opened, most recent first, so it reads like browser history.
+  const shown = jobs.filter((j) => inView(j, view));
+  if (view === "seen") shown.sort((a, b) => (b.lastSeenAt ?? b.createdAt).localeCompare(a.lastSeenAt ?? a.createdAt));
   const profile = getProfile();
   const profileEmpty = !profile.experience.length && !profile.projects.length;
   const counts = JOB_STATUSES.map((s) => [s, jobs.filter((j) => j.status === s).length] as const).filter(([, n]) => n);
@@ -49,7 +54,11 @@ export default async function JobsPage({ searchParams }: { searchParams: Promise
 
           {shown.length === 0 ? (
             <EmptyState icon={Briefcase} title={jobs.length ? "Nothing here" : "No jobs yet"}>
-              {jobs.length ? "No jobs match this view." : "Use “Add job” to paste a posting's link or its description."}
+              {view === "seen"
+                ? "Postings you open in the browser show up here, with the extension connected. Save one to move it to your jobs."
+                : jobs.length
+                  ? "No jobs match this view."
+                  : "Use “Add job” to paste a posting's link or its description, or save one from the browser extension."}
             </EmptyState>
           ) : (
             <div className="space-y-2">
@@ -64,7 +73,7 @@ export default async function JobsPage({ searchParams }: { searchParams: Promise
                       </div>
                     </div>
                     <StatusPill status={j.status} />
-                    <div className="hidden w-24 text-right text-xs text-ink-3 sm:block">{ago(j.updatedAt)}</div>
+                    <div className="hidden w-24 text-right text-xs text-ink-3 sm:block">{j.status === "seen" && j.lastSeenAt ? ago(j.lastSeenAt) : ago(j.updatedAt)}</div>
                     <ChevronRight className="h-4 w-4 text-ink-3 transition-transform group-hover:translate-x-0.5" />
                   </Card>
                 </Link>

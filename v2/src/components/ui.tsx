@@ -162,6 +162,7 @@ export function Segmented<T extends string>({
 }
 
 const STATUS_TONE: Record<string, string> = {
+  seen: "border-dashed border-rule-strong bg-transparent text-ink-3",
   saved: "border-rule bg-page text-ink-2",
   applied: "border-rule-strong bg-paper text-ink",
   interviewing: "border-brand bg-brand-soft text-brand-dark",

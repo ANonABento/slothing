@@ -6,6 +6,7 @@ import { newId } from "./ids";
 import {
   CoverLetter,
   type Answer,
+  type Application,
   DocMeta,
   Profile,
   Settings,
@@ -81,6 +82,15 @@ function createAnswers(db: Database.Database) {
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL
     );
+    CREATE TABLE IF NOT EXISTS applications (
+      id TEXT PRIMARY KEY,
+      job_id TEXT NOT NULL REFERENCES jobs(id) ON DELETE CASCADE,
+      url TEXT NOT NULL DEFAULT '',
+      answers TEXT NOT NULL DEFAULT '[]',
+      resume_version TEXT,
+      letter_version TEXT,
+      submitted_at TEXT NOT NULL
+    );
     CREATE TABLE IF NOT EXISTS kv (
       key TEXT PRIMARY KEY,
       value TEXT NOT NULL
@@ -108,6 +118,7 @@ function createVersions(db: Database.Database) {
 export function migrate(db: Database.Database) {
   const has = (table: string, column: string) => (db.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[]).some((c) => c.name === column);
   if (!has("documents", "meta")) db.exec("ALTER TABLE documents ADD COLUMN meta TEXT NOT NULL DEFAULT '{}'");
+  if (!has("jobs", "last_seen_at")) db.exec("ALTER TABLE jobs ADD COLUMN last_seen_at TEXT");
   createVersions(db);
   createAnswers(db);
 }
@@ -150,8 +161,8 @@ export function saveSettings(settings: Settings) {
 
 /* ─── Jobs ─── */
 
-type JobRow = Omit<Job, "createdAt" | "updatedAt"> & { created_at: string; updated_at: string };
-const toJob = ({ created_at, updated_at, ...r }: JobRow): Job => ({ ...r, createdAt: created_at, updatedAt: updated_at });
+type JobRow = Omit<Job, "createdAt" | "updatedAt" | "lastSeenAt"> & { created_at: string; updated_at: string; last_seen_at: string | null };
+const toJob = ({ created_at, updated_at, last_seen_at, ...r }: JobRow): Job => ({ ...r, lastSeenAt: last_seen_at ?? null, createdAt: created_at, updatedAt: updated_at });
 
 export function listJobs(): Job[] {
   return (db.prepare("SELECT * FROM jobs ORDER BY updated_at DESC").all() as JobRow[]).map(toJob);
@@ -162,13 +173,18 @@ export function getJob(id: string): Job | null {
   return row ? toJob(row) : null;
 }
 
-export function createJob(input: Pick<Job, "company" | "title" | "url" | "location" | "description">): string {
+export function createJob(input: Pick<Job, "company" | "title" | "url" | "location" | "description">, status: JobStatus = "saved"): string {
   const id = newId("job");
   const t = now();
   db.prepare(
-    "INSERT INTO jobs (id, company, title, url, location, description, status, notes, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, 'saved', '', ?, ?)",
-  ).run(id, input.company, input.title, normalizeUrl(input.url), input.location, input.description, t, t);
+    "INSERT INTO jobs (id, company, title, url, location, description, status, notes, last_seen_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, '', ?, ?, ?)",
+  ).run(id, input.company, input.title, normalizeUrl(input.url), input.location, input.description, status, status === "seen" ? t : null, t, t);
   return id;
+}
+
+/** You opened the posting again. Doesn't count as an update, so the Jobs list order stays yours. */
+export function touchSeen(id: string) {
+  db.prepare("UPDATE jobs SET last_seen_at = ? WHERE id = ?").run(now(), id);
 }
 
 const JOB_COLUMNS = ["company", "title", "url", "location", "description", "notes", "status"] as const;
@@ -332,4 +348,38 @@ export function getKv(key: string): string | null {
 
 export function setKv(key: string, value: string) {
   db.prepare("INSERT INTO kv (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value").run(key, value);
+}
+
+/* ─── Applications ─── */
+
+type AppRow = { id: string; job_id: string; url: string; answers: string; resume_version: string | null; letter_version: string | null; submitted_at: string };
+
+export function listApplications(jobId: string): Application[] {
+  return (db.prepare("SELECT * FROM applications WHERE job_id = ? ORDER BY submitted_at DESC").all(jobId) as AppRow[]).map((r) => ({
+    id: r.id,
+    jobId: r.job_id,
+    url: r.url,
+    answers: JSON.parse(r.answers),
+    resumeVersion: r.resume_version,
+    letterVersion: r.letter_version,
+    submittedAt: r.submitted_at,
+  }));
+}
+
+/** The latest saved version of a document, for an application to point at. */
+const latestVersion = (jobId: string, kind: DocKind) =>
+  (db.prepare("SELECT id FROM document_versions WHERE job_id = ? AND kind = ? ORDER BY created_at DESC, rowid DESC LIMIT 1").get(jobId, kind) as { id: string } | undefined)?.id ?? null;
+
+export function recordApplication(jobId: string, url: string, answers: Application["answers"]): string {
+  const id = newId("app");
+  db.prepare("INSERT INTO applications (id, job_id, url, answers, resume_version, letter_version, submitted_at) VALUES (?, ?, ?, ?, ?, ?, ?)").run(
+    id,
+    jobId,
+    url,
+    JSON.stringify(answers),
+    latestVersion(jobId, "resume"),
+    latestVersion(jobId, "cover_letter"),
+    now(),
+  );
+  return id;
 }

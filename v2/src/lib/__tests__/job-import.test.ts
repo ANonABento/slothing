@@ -12,6 +12,7 @@ import {
   parsePostingUrl,
   postingKey,
   workdayCompany,
+  linkedInTitle,
   readJob,
 } from "../job-import";
 import { generateJSON } from "../llm";
@@ -226,5 +227,12 @@ describe("workdayCompany", () => {
     expect(workdayCompany(url("nvidia.wd5.myworkdayjobs.com"), "IN02 NVIDIA GraphicsPLtd,Pune")).toBe("NVIDIA");
     expect(workdayCompany(url("acme.wd1.myworkdayjobs.com"), "Holdco 12 LLC")).toBe("Acme");
     expect(workdayCompany(url("jobs.lever.co"), "Spotify")).toBe("Spotify");
+  });
+});
+
+describe("linkedInTitle", () => {
+  it("reads LinkedIn's page title", () => {
+    expect(linkedInTitle("(3) Staff Engineer | Acme | LinkedIn")).toEqual({ title: "Staff Engineer", company: "Acme" });
+    expect(linkedInTitle("Jobs | LinkedIn")).toBeNull();
   });
 });

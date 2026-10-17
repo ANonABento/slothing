@@ -8,10 +8,9 @@ import { resetExtensionKey } from "@/lib/extension";
 import { extractText, parseResumeText, reuseIds } from "@/lib/import";
 import { readJob } from "@/lib/job-import";
 import { llmInfo, testLlm } from "@/lib/llm";
-import { profileAsTailored } from "@/lib/resolve";
-import { fitResume } from "@/lib/fit";
-import { draftAnswers, groundResume, letterWarnings, rewordBullet, tailorResume, writeCoverLetter, type DraftAnswer, type Rewording } from "@/lib/tailor";
-import { CoverLetter, JOB_STATUSES, Profile, Settings, TailoredBullet, TailoredResume, type AiSettings, type DocKind, type DocMeta, type Warning } from "@/lib/types";
+import { tailorJob } from "@/lib/tailor-job";
+import { draftAnswers, groundResume, letterWarnings, rewordBullet, writeCoverLetter, type DraftAnswer, type Rewording } from "@/lib/tailor";
+import { CoverLetter, JOB_STATUSES, Profile, Settings, TailoredBullet, TailoredResume, type AiSettings, type DocKind, type Warning } from "@/lib/types";
 import { z } from "zod";
 
 export type Result<T = undefined> = { ok: true; data?: T } | { ok: false; error: string };
@@ -135,22 +134,7 @@ function requireJob(id: string) {
 
 export async function tailorResumeAction(jobId: string, useAI: boolean): Promise<Result> {
   try {
-    const job = requireJob(jobId);
-    const profile = db.getProfile();
-    if (!profile.experience.length && !profile.projects.length) {
-      return { ok: false, error: "Your profile is empty — add your experience on the Profile page first." };
-    }
-    const { tailoring, resume: layout } = db.getSettings();
-    const llm = llmInfo();
-    // Both paths go through the same fitter: the AI's draft, or your whole profile.
-    const drafted = useAI ? await tailorResume(profile, job, tailoring) : { doc: profileAsTailored(profile), warnings: [] as Warning[] };
-    const fitted = await fitResume(profile, job, drafted.doc, layout);
-    // Re-ground the fitted resume: number warnings for bullets the fitter dropped go away; drops the AI caused stay.
-    const { doc, warnings } = groundResume(profile, fitted.doc);
-    const all = [...drafted.warnings.filter((w) => w.kind !== "number"), ...warnings];
-    if (fitted.overflow) all.unshift({ where: "Page length", message: `Your pinned items alone run past ${layout.pages === "two" ? "2 pages" : "1 page"}. Unpin something or change Page length in Settings.` });
-    const meta: DocMeta = useAI ? { source: "ai", provider: llm?.provider, model: llm?.model, latitude: tailoring.latitude } : { source: "auto" };
-    db.saveDoc(jobId, "resume", doc, all, meta);
+    await tailorJob(String(jobId), Boolean(useAI));
     revalidatePath(`/jobs/${jobId}`);
     return { ok: true };
   } catch (e) {
@@ -275,6 +259,18 @@ export async function draftAnswerAction(question: string): Promise<Result<DraftA
 }
 
 /* ─── Extension ─── */
+
+/** Whether the extension records postings you open as "seen". */
+export async function setAutoSaveAction(on: boolean): Promise<Result> {
+  try {
+    const s = db.getSettings();
+    db.saveSettings({ ...s, extension: { ...s.extension, autoSave: z.boolean().parse(on) } });
+    revalidatePath("/extension");
+    return { ok: true };
+  } catch (e) {
+    return fail(e);
+  }
+}
 
 /** A new key. The extension stops working until it's connected again. */
 export async function resetExtensionKeyAction(): Promise<Result<{ key: string }>> {

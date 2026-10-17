@@ -19,6 +19,22 @@ const OPS: Record<string, (body: unknown) => unknown> = {
     revalidatePath("/answers");
     return r;
   },
+  seen: async (b) => {
+    const r = await ext.seen(b);
+    if (r.job) revalidatePath("/");
+    return r;
+  },
+  tailor: async (b) => {
+    const r = await ext.tailor(b);
+    revalidatePath(`/jobs/${r.job.id}`);
+    return r;
+  },
+  applied: (b) => {
+    const r = ext.applied(b);
+    revalidatePath("/");
+    revalidatePath(`/jobs/${r.job.id}`);
+    return r;
+  },
   draft: ext.draft,
   propose: ext.propose,
   answers: (b) => {
