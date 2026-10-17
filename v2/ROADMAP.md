@@ -44,12 +44,14 @@ Built overnight on 2026-10-15 ahead of the friction log, at Kevin's request: key
 bullet, import a job from its URL. On 2026-10-16, also at his request, the extension and the answer bank
 (he counts both as core: applying is part of the loop). See `OVERNIGHT-REPORT.md`.
 
-- **Extension** *(built)*. One popup for the open tab: **Save job** (sends the rendered page to the same
-  importer as URL import, so logins and JavaScript-built pages like Workday work), **Fill form** (identity
-  fields from the profile, other questions from the answer bank, the job's tailored resume and letter
-  attached as PDFs; never submits), **Save my answers** back to the bank. Matching lives in
-  `src/lib/autofill.ts`, so it's tested in v2; the extension only reads and writes the page. Chrome only.
-  v1 had autofill with a field-mapping store, a learning loop and per-site multistep drivers: none ported.
+- **Extension** *(built; side panel since 2026-10-16)*. Click the icon for a panel beside the page that
+  follows your tab. Every page is classified locally (posting / form / sign-in) and shown as the badge.
+  Postings you open are recorded as **Seen** (Jobs → Seen: a history, and "seen before" when you
+  return; structured data only, never AI). From the panel: **Save**, **Tailor**, **Fill form** (profile,
+  answer bank, tailored PDFs; never submits), **Save my answers**, and **applied** is recorded when you
+  submit a form it filled (answers + resume version, on the job page). Matching lives in
+  `src/lib/autofill.ts`; the extension only reads and writes the page. Chrome only.
+  v1 had a field-mapping store, a learning loop and per-site multistep drivers: none ported.
 - **Answer bank** *(built)*. Saved answers to application questions, matched to a form's wording by
   terms, not text. A draft from your profile on request (AI), checked like a letter plus one check letters
   don't have yet: a key term of the posting your profile never uses.
@@ -80,6 +82,11 @@ so this is mostly packaging. In order, each step only if the one before falls sh
 Not planned: a hosted multi-user version. That brings back auth, `user_id` and billing.
 
 ## Later (maybe, each needs its own case)
+
+- **Agent apply.** An agent drives the same steps the panel does (detect → import → tailor → fill →
+  review), with submit still yours to approve. The extension's API is already one call per step and
+  every application is recorded, which is what an agent needs. Not before the human-in-the-loop version
+  has been used for real.
 
 - **Follow-ups.** Applied date, plus a nudge when nothing has happened in N days.
 - **Interview prep.** Likely questions from the job description and your profile.

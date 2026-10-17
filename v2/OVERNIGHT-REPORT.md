@@ -1,5 +1,30 @@
 # Overnight report (2026-10-16)
 
+## Round 2: the side panel (after "pin mode, all-site access, auto-save to Seen")
+
+**To try:** `npm run extension`, then press **reload** on the Slothing card in `chrome://extensions`
+(Chrome otherwise keeps the old background worker; this bit me in testing). Click the icon: the panel
+opens beside the page and follows the tab you're on.
+
+| | |
+|---|---|
+| **Badge on every page** | Classified in the page, nothing sent: **New** (a posting, just recorded), **Seen** (you've opened it before), **✓** (in your jobs), **Fill** (an application form), **Sent** (applied). Sign-in pages and everything else: no badge. |
+| **Jobs → Seen** | Postings you open, newest first, with when you last opened them. Structured data only (Greenhouse API, JSON-LD), never AI, so browsing costs nothing. LinkedIn, which rate-limits, falls back to its page title. Off switch on the Extension page. |
+| **Panel** | Seen → **Save to my jobs** → **Tailor resume** (AI or not) without leaving the posting → **Fill form** → you submit → the job moves to **Applied** and the job page shows what you sent (every answer, plus links to the exact resume/letter versions). **Mark applied** for forms it didn't fill. |
+| **Multi-step forms** | The job you pick on a form is remembered for the tab, so the next step knows it. |
+| **Job-specific answers** | A saved answer that names another of your jobs' companies isn't pasted into this one ("Your saved answer names Lakeside Health"); you can draft instead. Found because "Why our Cardiac ICU?" got the Medical ICU job's answer. |
+
+Tested end to end in Chromium on fixtures (New → Seen → Save → Tailor → Fill → submit → Sent, with the
+application recorded) and live: Stripe (Greenhouse) and Lever postings recorded as Seen with full
+descriptions; Wikipedia, GitHub's sign-in and a Lever listing page got no badge. Not tested: LinkedIn
+logged in (headless gets its sign-up wall), the real toolbar click / side panel opening (headless
+can't), Workday's multi-step apply. 158 tests pass; `tailorJob` now backs both the job page and the panel.
+
+Not done from the plan: a Workday-specific driver (each step fills with Fill form; the job is
+remembered). The floating in-page button became the side panel instead, as you suggested.
+
+## Round 1
+
 You asked for: templates removed (Resume design replaced them), then the extension and the answer bank,
 built properly. **All three are done and committed** (8 commits on `v2-rebuild`, nothing pushed).
 `npm run typecheck`, `npm test` (153 tests) and `next build` pass. About 3 AI calls in total.

@@ -10,8 +10,9 @@ A deliberately small rebuild of Slothing. One loop, done well:
    length on the real layout and never adds to your profile (see *Grounding* below).
 4. **Cover letter**: drafted from your profile and the job description.
 5. **PDF**: rendered with Typst.
-6. **Apply**: the browser extension saves postings and fills application forms from your profile and
-   your **answer bank**, attaching the tailored PDF.
+6. **Apply**: the browser extension notices postings as you browse (your history, under Jobs → Seen),
+   saves and tailors from a side panel, fills application forms from your profile and your **answer
+   bank** with the tailored PDF attached, and records what you sent when you submit.
 
 Single user, local SQLite, no auth.
 
@@ -35,9 +36,14 @@ npm run extension          # builds extension/dist (add -- --watch while working
 ```
 
 Then `chrome://extensions` → Developer mode → Load unpacked → `v2/extension/dist`, and click
-**Connect extension** on the app's Extension page. Rebuild and press reload on the extension card after
-pulling changes. The popup only touches a page when you click in it, and only talks to this app (a key
-from the Extension page; no CORS, so websites can't read the API).
+**Connect extension** on the app's Extension page. After rebuilding, press reload on the extension card
+(Chrome keeps running the old background worker otherwise).
+
+Click the icon to open a side panel that follows your tab. On every page the extension classifies
+locally (posting, application form, sign-in) and shows it as the icon's badge: **New** / **Seen**
+(a posting, recorded under Jobs → Seen), **✓** (in your jobs), **Fill** (a form), **Sent** (applied).
+Only postings are sent to the app, and only to this app (a key from the Extension page; no CORS, so
+websites can't read the API). Turn off recording on the Extension page.
 
 ### With Docker
 
@@ -82,7 +88,8 @@ src/lib/autofill.ts  what goes in each form field (profile, bank, PDF), what to 
 src/lib/extension.ts the extension's API: key, job for a URL, fill / draft / save
 src/app/api/pdf      GET ?kind=&job=&download=&source=
 src/app/api/extension/[op]  POST, for the extension only (needs its key)
-extension/           Chrome MV3: popup (React, the app's ui.tsx + tokens), page.ts (reads/fills forms)
+extension/           Chrome MV3: panel.tsx (side panel, the app's ui.tsx + tokens), watch.ts (classifies
+                     every page), background.ts (badge, seen, submit → applied), page.ts (reads/fills forms)
 ```
 
 ## Roadmap
