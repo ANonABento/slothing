@@ -87,10 +87,10 @@ export function JobDocuments({
           { value: "letter", label: <span className="inline-flex items-center gap-1.5"><Mail className="h-4 w-4" />Cover letter</span> },
         ]}
       />
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <Card className="self-start p-5">
           {dialog}
-          {current && (
+          {current && (originLabel(current.meta) || versions.length > 1) && (
             <div className="mb-4 flex items-center gap-2">
               <p className="min-w-0 flex-1 truncate font-mono text-xs text-ink-3">{originLabel(current.meta)}</p>
               {versions.length > 1 && (

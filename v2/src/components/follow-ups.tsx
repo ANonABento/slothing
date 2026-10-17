@@ -79,6 +79,7 @@ function FollowUpRow({ job, name }: { job: Job; name: string }) {
           onChange={(status) => run(() => updateJobAction(job.id, { status }))}
           disabled={pending}
           align="end"
+          size="sm"
           className="w-40"
         />
         <Button size="sm" variant="ghost" className="text-ink-3" onClick={() => run(() => followUpAction(job.id, "stop"))} disabled={pending} title="Don't remind me about this job">

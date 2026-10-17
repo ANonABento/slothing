@@ -80,7 +80,7 @@ function ModelSection({ ai, providers, onChange }: { ai: Settings["ai"]; provide
 
   return (
     <Section title="AI model" description="Used for importing resumes, reading job posts, tailoring and cover letters. Keys are stored on this computer, in Slothing's database.">
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field label="Provider">
           <Dropdown
             label="Provider"
@@ -188,9 +188,9 @@ function ApiKeyRow({ p, onSaved }: { p: ProviderStatus; onSaved: () => void }) {
         if (key.trim()) save(key);
       }}
     >
-      <Input type="password" value={key} onChange={(e) => setKey(e.target.value)} placeholder={`Paste your ${p.label} API key`} aria-label={`${p.label} API key`} autoComplete="off" spellCheck={false} className="min-w-0 flex-1" />
-      <Button size="sm" variant="primary" disabled={!key.trim() || pending}>{pending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Save"}</Button>
-      {editing && <Button size="sm" variant="ghost" type="button" onClick={() => (setEditing(false), setKey(""))}>Cancel</Button>}
+      <Input type="password" value={key} onChange={(e) => setKey(e.target.value)} placeholder="Paste API key" aria-label={`${p.label} API key`} autoComplete="off" spellCheck={false} className="min-w-0 flex-1" />
+      <Button variant="primary" disabled={!key.trim() || pending}>{pending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save"}</Button>
+      {editing && <Button variant="ghost" type="button" onClick={() => (setEditing(false), setKey(""))}>Cancel</Button>}
     </form>
   );
   return (
@@ -233,7 +233,7 @@ function TailoringSection({ t, onChange }: { t: Settings["tailoring"]; onChange:
       title="Tailoring"
       description="How much AI may change your wording. At every level it can only use facts from your profile, and invented numbers, skills or roles are removed or flagged."
     >
-      <div role="radiogroup" aria-label="How much AI may change" className="grid gap-2 sm:grid-cols-3">
+      <div role="radiogroup" aria-label="How much AI may change" className="grid grid-cols-1 gap-2 sm:grid-cols-3">
         {LATITUDES.map((l) => {
           const on = t.latitude === l;
           return (
@@ -244,7 +244,7 @@ function TailoringSection({ t, onChange }: { t: Settings["tailoring"]; onChange:
               aria-checked={on}
               onClick={() => onChange({ ...t, latitude: l })}
               className={cx(
-                "rounded-control border p-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand",
+                "flex flex-col rounded-control border p-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand",
                 on ? "border-ink bg-page shadow-paper" : "border-rule hover:border-rule-strong",
               )}
             >
@@ -302,7 +302,7 @@ function ThemeSwatch({ theme, selected, onSelect }: { theme: Theme; selected: bo
       aria-checked={selected}
       onClick={onSelect}
       className={cx(
-        "rounded-card border p-1.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand",
+        "flex flex-col rounded-card border p-1.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand",
         selected ? "border-ink shadow-paper" : "border-rule hover:border-rule-strong",
       )}
     >
@@ -333,7 +333,7 @@ function AppearanceSection({ a, onChange }: { a: Settings["appearance"]; onChang
   const group = (label: string, themes: readonly Theme[], value: Theme, set: (t: Theme) => void) => (
     <div>
       <Label>{label}</Label>
-      <div role="radiogroup" aria-label={label} className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div role="radiogroup" aria-label={label} className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {themes.map((t) => (
           <ThemeSwatch key={t} theme={t} selected={value === t} onSelect={() => set(t)} />
         ))}
@@ -424,7 +424,7 @@ export function SettingsEditor({ initial, providers }: { initial: Settings; prov
         }
       />
       <PageBody>
-        <div className="grid gap-6 lg:grid-cols-[200px_minmax(0,1fr)]">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[200px_minmax(0,1fr)]">
           {/* Mobile: a segmented row. Desktop: a sticky list beside the content. */}
           <div className="overflow-x-auto lg:hidden">
             <SegmentedLinks value={section} options={nav} size="sm" />

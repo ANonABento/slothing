@@ -3,9 +3,9 @@
 import { Check, Plus } from "lucide-react";
 import { useMemo, useState } from "react";
 
-import { addSource, fitOf, keywordGap, tokens, type GapSource, type KeyTerm, type TermStatus } from "@/lib/gap";
+import { addSource, keywordGap, tokens, type GapSource, type KeyTerm, type TermStatus } from "@/lib/gap";
 import type { Job, Profile, TailoredResume } from "@/lib/types";
-import { Button, Eyebrow, FitChip, cx } from "./ui";
+import { Button, Eyebrow, cx } from "./ui";
 
 const ORDER: TermStatus["kind"][] = ["on", "profile", "missing"];
 
@@ -24,7 +24,6 @@ function Highlight({ text, term }: { text: string; term: string }) {
  */
 export function KeywordGap({ job, profile, doc, onChange }: { job: Pick<Job, "title" | "description" | "company">; profile: Profile; doc: TailoredResume; onChange: (d: TailoredResume) => void }) {
   const gap = useMemo(() => keywordGap(profile, job, doc), [profile, job, doc]);
-  const fit = useMemo(() => fitOf(profile, job), [profile, job]);
   const [open, setOpen] = useState<string | null>(null);
   if (!gap.length) return null;
 
@@ -36,7 +35,6 @@ export function KeywordGap({ job, profile, doc, onChange }: { job: Pick<Job, "ti
     <div className="rounded-control border border-rule bg-page px-4 py-3">
       <div className="mb-2 flex flex-wrap items-baseline gap-x-3 gap-y-1">
         <Eyebrow>Keyword gap</Eyebrow>
-        {fit && <FitChip fit={fit} className="self-center" />}
         <p className="text-xs text-ink-3">
           {n("on")} of {gap.length} key terms on this resume
           {n("profile") > 0 && ` · ${n("profile")} more in your profile`}

@@ -194,7 +194,7 @@ function TemplateTab({ style, onChange }: { style: Style; onChange: (s: Style) =
               aria-checked={on}
               onClick={() => onChange(p.style)}
               className={cx(
-                "rounded-card border p-1.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand",
+                "flex flex-col rounded-card border p-1.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand",
                 on ? "border-ink shadow-paper" : "border-rule hover:border-rule-strong",
               )}
             >
@@ -214,7 +214,7 @@ function TextTab({ style, set }: { style: Style; set: <K extends keyof Style>(k:
   const custom = !(ACCENTS as readonly string[]).includes(style.accent.toLowerCase());
   return (
     <div className="space-y-5">
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Row label="Body font">
           <Dropdown label="Body font" value={style.font} options={FONT_OPTIONS} onChange={(font) => set("font", font)} />
         </Row>
@@ -423,12 +423,12 @@ export function ResumeDesignSection({ layout, onChange }: { layout: Layout; onCh
   const [tab, setTab] = useState<Tab>("template");
   const set = <K extends keyof Style>(k: K, v: Style[K]) => onChange({ ...layout, style: { ...layout.style, [k]: v } });
   return (
-    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+    <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
       <Card className="self-start p-5">
         <h2 className="font-display text-lg font-semibold tracking-tight">Resume design</h2>
         <p className="mb-4 mt-0.5 text-sm text-ink-2">How every resume looks. Cover letters use the same font, color and header.</p>
-        <div className="mb-5 overflow-x-auto">
-          <Segmented<Tab> value={tab} onChange={setTab} options={[...TABS]} size="sm" />
+        <div className="mb-5">
+          <Segmented<Tab> value={tab} onChange={setTab} options={[...TABS]} size="sm" wrap />
         </div>
         {tab === "template" && <TemplateTab style={layout.style} onChange={(style) => onChange({ ...layout, style })} />}
         {tab === "text" && <TextTab style={layout.style} set={set} />}

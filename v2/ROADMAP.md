@@ -117,7 +117,7 @@ Answers "is this worth applying to?" before you save or tailor. It reuses the ke
 machinery: the posting's key terms (`keyTerms`), split into the ones your profile has and the ones
 it doesn't (`hasTerm` / `spelledAs` over the whole profile, hidden items included).
 
-- **Shown as a band plus counts, not a percentage** (LinkedIn's "N of M skills" style, which shows its
+- **Shown as a dot, a band and counts, not a percentage** (LinkedIn's "N of M skills" style, which shows its
   evidence; Jobscan's and Jobright's percentages look more precise than a term count is): "Strong fit · 14 of 18 key terms", "Partial",
   "Weak", plus up to 3 missing terms ("Missing: Kubernetes, Terraform"). The missing side is the
   noisiest (leftover boilerplate, place names), so a percentage would look more exact than it is.
@@ -130,7 +130,8 @@ it doesn't (`hasTerm` / `spelledAs` over the whole profile, hidden items include
 - **Where it shows:**
   - Jobs list: a chip on each row; in Seen, a "Best fit" sort next to "Recent".
   - Panel: under the posting's title, before Save (`JobSummary.fit`).
-  - Job page: the band in the keyword gap's header, which already lists the terms.
+  - Not on the job page: the keyword gap there counts this resume's terms, and a second, different
+    count beside it read as a contradiction (UI review, 2026-10-17).
 - **Not:** LLM ranking (job-ops does it, but it costs a call per posting you open), weights per
   term, a "should I apply" verdict.
 - ~150 lines with tests.

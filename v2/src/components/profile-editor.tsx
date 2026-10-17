@@ -90,7 +90,7 @@ function ExtraSectionEditor({ section, onChange, controls }: { section: ExtraSec
             dim={e.rank === "hidden"}
           >
             <RankNote rank={e.rank} />
-            <div className="grid gap-2 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               <Field label="Title" value={e.title} onChange={(v) => update({ ...e, title: v })} placeholder="AWS Solutions Architect" />
               <Field label="Issuer or organisation" value={e.org} onChange={(v) => update({ ...e, org: v })} />
               <Field label="Start" value={e.start} onChange={(v) => update({ ...e, start: v })} />
@@ -204,14 +204,14 @@ export function ProfileEditor({ initial }: { initial: Profile }) {
         }
       />
       <PageBody>
-    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+    <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
       <div className="min-w-0 space-y-4">
         {error && <p className="text-sm text-warn">{error}</p>}
 
         <ImportPanel hasData={hasData} onImported={setP} />
 
         <Section title="Contact">
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <Field label="Name" value={p.contact.name} onChange={(v) => setContact("name", v)} />
             <Field label="Email" value={p.contact.email} onChange={(v) => setContact("email", v)} />
             <Field label="Phone" value={p.contact.phone} onChange={(v) => setContact("phone", v)} />
@@ -264,7 +264,7 @@ export function ProfileEditor({ initial }: { initial: Profile }) {
                 dim={e.rank === "hidden"}
               >
                 <RankNote rank={e.rank} />
-                <div className="grid gap-2 sm:grid-cols-2">
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                   <Field label="Title" value={e.title} onChange={(v) => update({ ...e, title: v })} />
                   <Field label="Company" value={e.company} onChange={(v) => update({ ...e, company: v })} />
                   <Field label="Start" value={e.start} onChange={(v) => update({ ...e, start: v })} placeholder="Jan 2022" />
@@ -299,7 +299,7 @@ export function ProfileEditor({ initial }: { initial: Profile }) {
                 dim={pr.rank === "hidden"}
               >
                 <RankNote rank={pr.rank} />
-                <div className="grid gap-2 sm:grid-cols-2">
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                   <Field label="Name" value={pr.name} onChange={(v) => update({ ...pr, name: v })} />
                   <Field label="Link" value={pr.url} onChange={(v) => update({ ...pr, url: v })} placeholder="github.com/you/project" />
                   <FieldShell label="Tools" className="sm:col-span-2">
@@ -333,7 +333,7 @@ export function ProfileEditor({ initial }: { initial: Profile }) {
                 dim={e.rank === "hidden"}
               >
                 <RankNote rank={e.rank} />
-                <div className="grid gap-2 sm:grid-cols-2">
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                   <Field label="School" value={e.school} onChange={(v) => update({ ...e, school: v })} />
                   <Field label="Degree" value={e.degree} onChange={(v) => update({ ...e, degree: v })} />
                   <Field label="Start" value={e.start} onChange={(v) => update({ ...e, start: v })} />

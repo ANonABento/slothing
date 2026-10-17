@@ -62,7 +62,7 @@ export default async function JobsPage({ searchParams }: { searchParams: Promise
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex flex-wrap items-center gap-3">
               <SegmentedLinks value={view} options={VIEWS.map((v) => ({ ...v, href: v.value === "active" ? "/" : `/?view=${v.value}` }))} />
-              {view === "seen" && (
+              {view === "seen" && shown.length > 1 && (
                 <SegmentedLinks
                   size="sm"
                   value={byFit ? "fit" : "recent"}

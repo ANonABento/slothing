@@ -33,7 +33,8 @@ export function PageHeader({
         ) : (
           <IconTile icon={icon} />
         )}
-        <div className="min-w-0 flex-1">
+        {/* At least this wide, so on a phone the actions wrap below rather than squeezing the title. */}
+        <div className="min-w-[9rem] flex-1 lg:min-w-0">
           <h1 className="truncate font-display text-2xl font-bold leading-tight tracking-tight">{title}</h1>
           {description && <div className="truncate text-sm text-ink-2">{description}</div>}
         </div>

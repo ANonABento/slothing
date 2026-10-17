@@ -144,14 +144,17 @@ export function Segmented<T extends string>({
   value,
   onChange,
   size = "md",
+  wrap = false,
 }: {
   options: { value: T; label: ReactNode }[];
   value: T | null;
   onChange: (v: T) => void;
   size?: Size;
+  /** Many options in a narrow space: wrap onto a second row instead of clipping. */
+  wrap?: boolean;
 }) {
   return (
-    <div className={segmentGroup}>
+    <div className={cx(segmentGroup, wrap && "flex-wrap")}>
       {options.map((o) => (
         <button key={o.value} type="button" aria-pressed={value === o.value} onClick={() => onChange(o.value)} className={segmentItem(value === o.value, size)}>
           {o.label}
@@ -179,10 +182,11 @@ export function StatusPill({ status }: { status: string }) {
   );
 }
 
+// A dot and a label, not a pill: on a job row the status is the pill.
 const FIT = {
-  strong: { label: "Strong fit", tone: "border-ok bg-ok-soft text-ok" },
-  partial: { label: "Partial fit", tone: "border-rule-strong bg-paper text-ink-2" },
-  weak: { label: "Weak fit", tone: "border-rule bg-transparent text-ink-3" },
+  strong: { label: "Strong fit", dot: "bg-ok" },
+  partial: { label: "Partial fit", dot: "bg-warn" },
+  weak: { label: "Weak fit", dot: "bg-rule-strong" },
 } as const;
 
 /** How much of a posting your profile covers (`fitOf`): the band, with the counts and missing terms on hover or beside it. */
@@ -191,9 +195,10 @@ export function FitChip({ fit, detail = false, className }: { fit: { band: keyof
   const missing = fit.missing.length ? `Missing: ${fit.missing.join(", ")}` : "";
   return (
     <span className={cx("inline-flex min-w-0 items-center gap-2", className)} title={detail ? undefined : [counts, missing].filter(Boolean).join(" · ")}>
-      <span className={cx("inline-flex h-6 shrink-0 items-center rounded-chip border px-2 text-xs font-medium", FIT[fit.band].tone)}>
+      <span className="inline-flex shrink-0 items-center gap-1.5 text-xs font-medium text-ink-2">
+        <span className={cx("h-2 w-2 rounded-full", FIT[fit.band].dot)} aria-hidden />
         {FIT[fit.band].label}
-        <span className="ml-1.5 font-mono font-normal opacity-80">{fit.have}/{fit.total}</span>
+        <span className="font-mono font-normal text-ink-3">{fit.have}/{fit.total}</span>
       </span>
       {detail && missing && <span className="truncate text-xs text-ink-3">{missing}</span>}
     </span>

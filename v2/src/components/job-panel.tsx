@@ -32,7 +32,7 @@ export function StatusSelect({ job }: { job: Job }) {
   };
   return (
     <div className="flex items-center gap-2">
-      <Eyebrow>Status</Eyebrow>
+      <Eyebrow className="hidden sm:block">Status</Eyebrow>
       <Dropdown label="Job status" value={status} onChange={change} options={STATUS_OPTIONS} disabled={pending} align="end" className="w-40" />
       {error && <span className="text-xs text-warn">{error}</span>}
     </div>
@@ -80,13 +80,13 @@ export function JobPanel({ job }: { job: Job }) {
       </button>
       {open && (
         <div className="space-y-4 border-t border-rule px-5 py-5">
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <Field label="Company"><Input value={f.company} onChange={set("company")} /></Field>
             <Field label="Title"><Input value={f.title} onChange={set("title")} /></Field>
             <Field label="Location"><Input value={f.location} onChange={set("location")} /></Field>
             <Field label="Posting URL"><Input value={f.url} onChange={set("url")} placeholder="https://" /></Field>
           </div>
-          <div className="grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
             <Field label="Job description"><Textarea rows={12} className="max-h-[32rem]" value={f.description} onChange={set("description")} placeholder="Paste the full job description" /></Field>
             <Field label="Notes"><Textarea rows={12} className="max-h-[32rem]" value={f.notes} onChange={set("notes")} placeholder="Referral, recruiter name, follow-up date…" /></Field>
           </div>

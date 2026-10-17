@@ -27,6 +27,7 @@ export function Dropdown<T extends string>({
   label,
   disabled,
   align = "start",
+  size = "md",
   className,
 }: {
   options: DropdownOption<T>[];
@@ -37,6 +38,8 @@ export function Dropdown<T extends string>({
   label: string;
   disabled?: boolean;
   align?: "start" | "end";
+  /** "sm" lines up with small buttons. */
+  size?: "sm" | "md";
   className?: string;
 }) {
   const id = useId();
@@ -118,7 +121,7 @@ export function Dropdown<T extends string>({
             show();
           }
         }}
-        className={cx(fieldClass, "flex h-10 items-center gap-2 text-left", open && "border-brand ring-2 ring-brand-soft")}
+        className={cx(fieldClass, "flex items-center gap-2 text-left", size === "sm" ? "h-8 text-sm" : "h-10", open && "border-brand ring-2 ring-brand-soft")}
       >
         <span className={cx("min-w-0 flex-1 truncate", !selected && "text-ink-3")}>{selected ? selected.label : placeholder}</span>
         <ChevronDown className={cx("h-4 w-4 shrink-0 text-ink-3 transition-transform", open && "rotate-180")} />
