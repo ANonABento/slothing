@@ -119,7 +119,11 @@ function App() {
     if (!pinned) chrome.tabs.onActivated.addListener(onActivated);
     chrome.tabs.onUpdated.addListener(onUpdated);
     chrome.runtime.onMessage.addListener(onMessage);
+    // Connected (or disconnected) from the app's Extension page while the panel is open.
+    const onStorage = (changes: Record<string, unknown>, area: string) => area === "local" && "connection" in changes && soon();
+    chrome.storage.onChanged.addListener(onStorage);
     return () => {
+      chrome.storage.onChanged.removeListener(onStorage);
       chrome.tabs.onActivated.removeListener(onActivated);
       chrome.tabs.onUpdated.removeListener(onUpdated);
       chrome.runtime.onMessage.removeListener(onMessage);
