@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { bestAnswer, matchOption, questionSimilarity, questionTerms } from "../answers";
+import { MATCH_THRESHOLD, bestAnswer, matchOption, questionSimilarity, questionTerms } from "../answers";
 import { answerWarning } from "../tailor";
 import type { Answer } from "../types";
 import { profile } from "./fixture";
@@ -23,7 +23,7 @@ describe("questionTerms", () => {
     expect(questionTerms("Tell us about yourself").has("united")).toBe(false);
   });
   it("drops framing words and required markers", () => {
-    expect([...questionTerms("Please describe your notice period *")]).toEqual(["notice", "period"]);
+    expect([...questionTerms("Please describe your notice period *")]).toEqual(["start", "date"]);
   });
 });
 
@@ -45,6 +45,15 @@ describe("questionSimilarity", () => {
     ["Are you open to relocation?", "Are you open to working onsite?"],
   ];
   it.each(different)("does not match %s ~ %s", (a, b) => expect(questionSimilarity(a, b)).toBeLessThan(0.6));
+});
+
+describe("question synonyms", () => {
+  it("salary and start-date questions match however they're worded", () => {
+    expect(questionSimilarity("Expected salary", "What are your salary expectations?")).toBeGreaterThanOrEqual(MATCH_THRESHOLD);
+    expect(questionSimilarity("Notice period / availability", "When can you start?")).toBeGreaterThanOrEqual(MATCH_THRESHOLD);
+    expect(questionSimilarity("Desired start date", "When can you start?")).toBeGreaterThanOrEqual(MATCH_THRESHOLD);
+    expect(questionSimilarity("Expected salary", "When can you start?")).toBeLessThan(MATCH_THRESHOLD);
+  });
 });
 
 describe("bestAnswer", () => {

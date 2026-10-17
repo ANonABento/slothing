@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { FormField, classify, planFill, profileValue, proposeAnswers } from "../autofill";
+import { FormField, classify, countryOf, planFill, profileValue, proposeAnswers } from "../autofill";
 import { Profile, type Answer } from "../types";
 import { profile } from "./fixture";
 
@@ -145,5 +145,52 @@ describe("proposeAnswers", () => {
       { fieldId: "2", question: "When could you start?", answer: "In two weeks", status: "update", replaces: { id: "a1", answer: "" } },
       { fieldId: "4", question: "Why us?", answer: "Because.", status: "new" },
     ]);
+  });
+});
+
+describe("countries", () => {
+  it("a location's country: US states and Canadian provinces by code or name, else the last part as written", () => {
+    expect(countryOf("Chicago, IL")).toBe("United States");
+    expect(countryOf("Austin, Texas")).toBe("United States");
+    expect(countryOf("Brooklyn, New York")).toBe("United States");
+    expect(countryOf("Toronto, ON")).toBe("Canada");
+    expect(countryOf("Berlin, Germany")).toBe("Germany");
+    expect(countryOf("London, UK")).toBe("United Kingdom");
+    expect(countryOf("Chicago")).toBe("");
+  });
+
+  it("a country field, a dropdown that names it differently, and a location dropdown of countries", () => {
+    const p = Profile.parse({ ...profile, contact: { ...profile.contact, location: "Chicago, IL" } });
+    expect(classify(field("c", "Country", { kind: "select" }))).toEqual({ type: "profile", key: "country" });
+    expect(classify(field("c", "What is your current country of residence?", { kind: "select" }))).toEqual({ type: "profile", key: "country" });
+    expect(classify(field("c", "Country code", { kind: "select" })).type).toBe("question");
+    const plan = planFill(
+      [
+        field("a", "Country", { kind: "select", options: ["Select…", "Canada", "United States of America"] }),
+        field("b", "What is your location?", { kind: "select", options: ["Afghanistan", "USA", "Zambia"] }),
+      ],
+      p,
+      [],
+      { resume: false, letter: false },
+    );
+    expect(plan.fills).toEqual([
+      { id: "a", source: "profile", value: "United States of America", option: 2 },
+      { id: "b", source: "profile", value: "USA", option: 1 },
+    ]);
+  });
+});
+
+describe("letter and summary text boxes", () => {
+  it("a cover letter box gets the letter's text; without a letter it's left for you", () => {
+    const box = field("l", "Cover letter", { kind: "textarea" });
+    expect(classify(box)).toEqual({ type: "letter" });
+    expect(planFill([box], profile, [], { resume: false, letter: true, letterText: "Dear team,\n\nHello." }).fills).toEqual([{ id: "l", source: "letter", value: "Dear team,\n\nHello." }]);
+    expect(planFill([box], profile, [], { resume: false, letter: false }).skipped).toEqual([{ id: "l", reason: "no-document" }]);
+    // A question about letters isn't the letter.
+    expect(classify(field("q", "Is there anything you'd like to add that isn't in your cover letter or resume?", { kind: "textarea" })).type).toBe("question");
+  });
+
+  it("a summary box gets the profile summary", () => {
+    expect(planFill([field("s", "Summary", { kind: "textarea" })], profile, [], { resume: false, letter: false }).fills).toEqual([{ id: "s", source: "profile", value: profile.summary }]);
   });
 });

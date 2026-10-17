@@ -505,7 +505,7 @@ function FormSection({
           } catch (e) {
             docError = (e as Error).message;
           }
-        } else pageFills.push({ id: f.id, value: f.value, option: f.option, loose: f.source === "profile" });
+        } else pageFills.push({ id: f.id, value: f.value, option: "option" in f ? f.option : undefined, loose: f.source === "profile" });
       }
       const done = new Set(await fillPage(tab, pageFills));
       setResult({
@@ -544,6 +544,7 @@ function FormSection({
 
   const fromProfile = result?.filled.filter((f) => f.source === "profile").length ?? 0;
   const fromBank = result?.filled.filter((f) => f.source === "bank").length ?? 0;
+  const fromLetter = result?.filled.filter((f) => f.source === "letter").length ?? 0;
   const drafted = Object.values(drafts).filter((v) => v !== "none").length;
   const left = result?.skipped.filter((s) => !(drafts[s.id] && drafts[s.id] !== "none")) ?? [];
 
@@ -564,7 +565,7 @@ function FormSection({
           <Notice tone={result.filled.length + result.attached.length ? "ok" : "plain"}>
             <span className="font-semibold text-ink">{plural(result.filled.length + drafted, "field")} filled</span>
             {result.filled.length + drafted > 0 && (
-              <span className="text-ink-3"> · {[fromProfile && `${fromProfile} from your profile`, fromBank && `${fromBank} from your answers`, drafted && `${drafted} drafted by AI`].filter(Boolean).join(", ")}</span>
+              <span className="text-ink-3"> · {[fromProfile && `${fromProfile} from your profile`, fromBank && `${fromBank} from your answers`, fromLetter && "your cover letter", drafted && `${drafted} drafted by AI`].filter(Boolean).join(", ")}</span>
             )}
             {result.attached.map((a) => (
               <div key={a.doc} className="mt-1 flex items-center gap-1.5">

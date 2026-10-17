@@ -224,7 +224,12 @@ const FillInput = z.object({ jobId: z.string().optional(), fields: z.array(FormF
 export function fill(input: unknown): { fills: Fill[]; skipped: Skip[] } {
   const { jobId, fields } = FillInput.parse(input);
   const job = jobId ? db.getJob(jobId) : null;
-  const docs = { resume: Boolean(job && db.getDoc(job.id, "resume")), letter: Boolean(job && db.getDoc(job.id, "cover_letter")) };
+  const letter = job ? db.getDoc(job.id, "cover_letter") : null;
+  // A form's cover-letter text box gets the letter as text: greeting, paragraphs, closing and your name.
+  const letterText = letter
+    ? [letter.data.greeting, ...letter.data.paragraphs.filter((p) => p.trim()), `${letter.data.closing}\n${db.getProfile().contact.name.split(",")[0].trim()}`].join("\n\n")
+    : "";
+  const docs = { resume: Boolean(job && db.getDoc(job.id, "resume")), letter: Boolean(letter), letterText };
   // Companies of your other jobs, for answers written for one of them ("…at Lakeside…").
   const mine = job?.company.trim().toLowerCase();
   const others = [...new Set(db.listJobs().map((j) => j.company.trim()).filter((c) => c && c.toLowerCase() !== mine))];

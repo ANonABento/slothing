@@ -156,7 +156,7 @@ alongside B and C, not after them.
 - Ships by deleting the Follow-ups placeholder in `src/lib/roadmap.ts`. Not included: email or
   calendar integration, notifications, an AI-written follow-up.
 
-### F. Fill works on any application site (after B, C, E)
+### F. Fill works on any application site — in progress
 
 Kevin: it should work on all kinds of sites, not only Workday. So it isn't a Workday driver: it's
 handling the custom widgets application sites are built from, by what they are (ARIA roles, the
@@ -178,7 +178,11 @@ per-site scripts unless a site can't be handled any other way.
    Workable, Taleo / Oracle Recruiting, SuccessFactors, Jobvite, BambooHR, Rippling, LinkedIn Easy Apply (a modal
    with steps), Indeed Apply, and a company's own form.
 3. **Never:** submit, create accounts, enter passwords, solve CAPTCHAs. Sign-in stays yours.
-4. **Pass:** a table in `FRICTION.md` per platform with fields filled / left, and no wrong value in a
+4. **Done so far (2026-10-17):** step 1's widgets (ARIA radios, read-only and button dropdowns,
+   contenteditable), plus country, summary and letter-text fields in the planner. Checked live on
+   Greenhouse, Lever, Ashby and Workable. Left: the platforms that need a real browser or an account
+   (SmartRecruiters, Recruitee, Rippling, Workday, iCIMS, Taleo, LinkedIn, Indeed), split dates and repeaters.
+5. **Pass:** a table in `FRICTION.md` per platform with fields filled / left, and no wrong value in a
    field (a wrong value is worse than an empty one).
 
 ## Iteration 3: self-hosting (others can run it with their own data and keys)

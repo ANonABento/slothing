@@ -18,7 +18,9 @@ const SYNONYMS: [RegExp, string][] = [
   [/\bcv\b/gi, "resume"],
   [/\bpronouns?\b/gi, "pronoun"],
   [/\b(salary|compensation|pay)\s+(expectations?|requirements?|range)\b/gi, "salary expectation"],
-  [/\bnotice\s+period\b/gi, "notice period"],
+  [/\b(expected|desired|target)\s+(salary|compensation|pay)\b/gi, "salary expectation"],
+  // When you could start: the same question as a date, a notice period or availability.
+  [/\b(notice\s+period|availability|(earliest\s+)?start(ing)?\s+date|when\s+(can|could)\s+you\s+start)\b/gi, "start date"],
   [/\bhow\s+did\s+you\s+(hear|learn|find out)\b/gi, "hear about"],
 ];
 

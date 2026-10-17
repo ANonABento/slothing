@@ -159,13 +159,29 @@ const tag = (el: Element) => {
 const toggles = (box: Element) => [...box.children].filter((c): c is HTMLButtonElement => c instanceof HTMLButtonElement && c.hasAttribute("aria-pressed") && visible(c));
 const isToggleRow = (el: Element) => toggles(el).length >= 2;
 
+/** ARIA radios that aren't inputs (Workable, Radix, MUI): a [role=radiogroup] of [role=radio] elements. */
+const ariaRadios = (group: Element) => [...group.querySelectorAll<HTMLElement>("[role=radio]")].filter(visible);
+const isAriaRadioGroup = (el: Element) => el.getAttribute("role") === "radiogroup" && ariaRadios(el).length >= 2;
+const ariaLabelOf = (el: Element) => byIds(el.getAttribute("aria-labelledby")) || clean(el.getAttribute("aria-label")) || nearbyText(el);
+
+/** A button that opens a list to pick from (Workday, Radix and Headless UI selects): a dropdown without an input. */
+const isListButton = (el: Element) => el instanceof HTMLButtonElement && el.getAttribute("aria-haspopup") === "listbox";
+const listButtonValue = (el: HTMLElement) => {
+  const t = clean(el.innerText);
+  return PLACEHOLDER.test(t) ? "" : t;
+};
+
+/** A rich text box (contenteditable) standing in for a textarea. */
+const isEditable = (el: Element) => el instanceof HTMLElement && el.isContentEditable && el.getAttribute("contenteditable") !== "false" && !el.parentElement?.isContentEditable;
+
 /** Every fillable field in this frame, in page order. `combos` counts the searchable dropdowns among them. */
 export function read(): { fields: FormField[]; combos: number; frames: number } {
   const fields: FormField[] = [];
   const radios = new Map<string, HTMLInputElement[]>();
   let combos = 0;
   for (const el of document.querySelectorAll<Control>("input, textarea, select")) {
-    if (el.disabled || (el as HTMLInputElement).readOnly) continue;
+    // A read-only combobox is a dropdown you pick from (Workable), not a locked field.
+    if (el.disabled || ((el as HTMLInputElement).readOnly && !isCombo(el))) continue;
     const type = el instanceof HTMLInputElement ? el.type.toLowerCase() : el instanceof HTMLSelectElement ? "select" : "textarea";
     // File inputs are usually hidden behind a styled button, so they're kept when invisible.
     if (type !== "file" && !visible(el)) continue;
@@ -212,6 +228,32 @@ export function read(): { fields: FormField[]; combos: number; frames: number } 
       required: Boolean(box.querySelector("input[required]")) || /required/i.test(heading?.className.toString() ?? ""),
       value: pressed ? clean(pressed.innerText) : "",
     });
+  }
+  for (const group of document.querySelectorAll("[role=radiogroup]")) {
+    if (!isAriaRadioGroup(group) || !visible(group)) continue;
+    const opts = ariaRadios(group);
+    // Its own hidden inputs were left out above; drop their native group so it isn't read twice.
+    for (const [k, list] of radios) if (list.every((r) => group.contains(r))) radios.delete(k);
+    const checked = opts.find((o) => o.getAttribute("aria-checked") === "true");
+    fields.push({
+      id: tag(group),
+      kind: "radio",
+      label: ariaLabelOf(group),
+      name: group.querySelector("input")?.name ?? "",
+      placeholder: "",
+      autocomplete: "",
+      options: opts.map((o) => visibleText(o) || clean(o.getAttribute("aria-label"))),
+      required: group.getAttribute("aria-required") === "true" || opts.some((o) => o.getAttribute("aria-required") === "true"),
+      value: checked ? visibleText(checked) : "",
+    });
+  }
+  for (const btn of document.querySelectorAll<HTMLButtonElement>("button[aria-haspopup=listbox]")) {
+    if (btn.disabled || !visible(btn)) continue;
+    fields.push({ id: tag(btn), kind: "select", label: ariaLabelOf(btn), name: btn.name || btn.id, placeholder: "", autocomplete: "", options: [], required: btn.getAttribute("aria-required") === "true", value: listButtonValue(btn) });
+  }
+  for (const el of document.querySelectorAll<HTMLElement>("[contenteditable]")) {
+    if (!isEditable(el) || !visible(el)) continue;
+    fields.push({ id: tag(el), kind: "textarea", label: ariaLabelOf(el), name: el.id, placeholder: clean(el.getAttribute("data-placeholder") ?? el.getAttribute("aria-placeholder")), autocomplete: "", options: [], required: el.getAttribute("aria-required") === "true", value: clean(el.innerText) });
   }
   for (const group of radios.values()) {
     const id = tag(group[0]);
@@ -327,6 +369,35 @@ async function pickCombo(el: HTMLInputElement, value: string, loose: boolean): P
   return true;
 }
 
+/** Choose in a dropdown opened by a button: open it, click the option that matches, or close it again. */
+async function pickFromButton(btn: HTMLButtonElement, value: string): Promise<boolean> {
+  const OPTION = '[role="option"]';
+  const before = new Set(document.querySelectorAll(OPTION));
+  const press = (type: string) => new MouseEvent(type, { bubbles: true, cancelable: true, button: 0, view: window });
+  // Radix opens on pointerdown, others on click.
+  btn.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, cancelable: true, button: 0, pointerType: "mouse" }));
+  btn.dispatchEvent(press("mousedown"));
+  btn.dispatchEvent(press("mouseup"));
+  btn.click();
+  const options = () => {
+    const owned = document.getElementById(btn.getAttribute("aria-controls") || btn.getAttribute("aria-owns") || "")?.querySelectorAll<HTMLElement>(OPTION);
+    const list = [...(owned?.length ? owned : [...document.querySelectorAll<HTMLElement>(OPTION)].filter((o) => !before.has(o)))].filter(visible);
+    return list.length ? list : null;
+  };
+  const list = await waitFor(options, 1500);
+  const i = list ? matchOption(value, list.map((o) => o.innerText)) : -1;
+  if (!list || i < 0) {
+    btn.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", code: "Escape", bubbles: true }));
+    return false;
+  }
+  list[i].dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, cancelable: true, button: 0, pointerType: "mouse" }));
+  list[i].dispatchEvent(press("mousedown"));
+  list[i].dispatchEvent(press("mouseup"));
+  list[i].click();
+  await sleep(100);
+  return true;
+}
+
 /**
  * A text field that searches as you type and only keeps a value picked from its results (Lever's "Current
  * location" clears typed text when you leave it). Type, wait for the results that appear beside it, and
@@ -374,7 +445,34 @@ async function fill(fills: PageFill[]): Promise<string[]> {
     const els = all(f.id);
     const el = els[0] as Element | undefined;
     if (!el) continue;
-    if (isToggleRow(el)) {
+    if (isAriaRadioGroup(el)) {
+      const opts = ariaRadios(el);
+      const i = matchOption(f.value ?? "", opts.map((o) => visibleText(o) || clean(o.getAttribute("aria-label"))));
+      if (i < 0) continue;
+      const checked = () => opts[i].getAttribute("aria-checked") === "true";
+      // The wrapper, its label or its hidden input: whichever the widget listens to.
+      for (const target of [opts[i].querySelector("input"), opts[i].querySelector("label"), opts[i]]) {
+        if (checked()) break;
+        if (!target) continue;
+        target.click();
+        await sleep(50);
+      }
+      if (!checked()) continue;
+      mark(el);
+    } else if (isListButton(el)) {
+      if (!(await pickFromButton(el as HTMLButtonElement, f.value ?? ""))) continue;
+      mark(el);
+    } else if (isEditable(el)) {
+      const box = el as HTMLElement;
+      box.focus();
+      // insertText goes through the editor's own input handling (ProseMirror, Draft, Quill); a plain set is the fallback.
+      if (!document.execCommand("selectAll") || !document.execCommand("insertText", false, f.value ?? "")) {
+        box.innerText = f.value ?? "";
+        box.dispatchEvent(new InputEvent("input", { bubbles: true, inputType: "insertText", data: f.value ?? "" }));
+      }
+      box.blur();
+      mark(box);
+    } else if (isToggleRow(el)) {
       const buttons = toggles(el);
       const i = matchOption(f.value ?? "", buttons.map((b) => clean(b.innerText)));
       if (i < 0) continue;

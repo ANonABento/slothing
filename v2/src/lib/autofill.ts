@@ -44,10 +44,18 @@ export type ProfileKey =
   | "currentCompany"
   | "currentTitle"
   | "school"
-  | "degree";
+  | "degree"
+  | "country"
+  | "summary";
 
 /** "ignore": not a question for you (an upload that parses your resume to fill the form, which is done here). */
-export type FieldRole = { type: "profile"; key: ProfileKey } | { type: "file"; doc: "resume" | "letter" } | { type: "question" } | { type: "ignore" };
+export type FieldRole =
+  | { type: "profile"; key: ProfileKey }
+  | { type: "file"; doc: "resume" | "letter" }
+  /** A text box for the cover letter itself: its text goes in. */
+  | { type: "letter" }
+  | { type: "question" }
+  | { type: "ignore" };
 
 // Checked in order: the first rule whose pattern matches (and whose `not` doesn't) wins.
 const RULES: { key: ProfileKey; auto?: string[]; re: RegExp; not?: RegExp }[] = [
@@ -64,6 +72,8 @@ const RULES: { key: ProfileKey; auto?: string[]; re: RegExp; not?: RegExp }[] = 
   { key: "currentTitle", auto: ["organization-title"], re: /(current|present|most recent)\s*(job\s*)?(title|position|role)|^\W*(job\s*)?title\W*$/i, not: /previous|past|desired|applying/i },
   { key: "city", auto: ["address-level2"], re: /^\W*city\W*$|current\s*city|city\s*of\s*residence/i },
   { key: "location", re: /^\W*(current\s*)?location\W*$|what\s*is\s*your\s*(current\s*)?location|where\s*are\s*you\s*(currently\s*)?(based|located)|location\s*\(city/i, not: /preferred|desired|willing|open to/i },
+  { key: "country", auto: ["country", "country-name"], re: /^\W*(current\s*)?country(\s*of\s*residence)?\W*$|(what|which)\s*(is\s*your\s*)?(current\s*)?country|country\s*of\s*residence|country\s*you\s*(live|reside)/i, not: /code|citizen|authori[sz]|eligib|sponsor|work in|dial/i },
+  { key: "summary", re: /^\W*(professional\s*|profile\s*|career\s*)?summary\W*$/i },
   { key: "school", re: /^\W*(school|university|college|institution)(\s*name)?\W*$/i },
   { key: "degree", re: /^\W*degree\W*$/i },
 ];
@@ -73,7 +83,7 @@ const LETTER = /cover[\s_-]*letter|motivation[\s_-]*letter/i;
 // An upload that parses your resume to fill the form (Ashby's "Autofill from resume"): the form is filled here instead.
 const PARSER = /autofill|auto-fill|parse|import from/i;
 // Profile values that make sense as a choice in a dropdown or radio group. A "Phone" dropdown is a country code.
-const CHOICE_KEYS = new Set<ProfileKey>(["city", "location", "school", "degree"]);
+const CHOICE_KEYS = new Set<ProfileKey>(["city", "location", "school", "degree", "country"]);
 
 /** What a field asks for. Labels decide; name and placeholder only help when the label is empty or generic. */
 export function classify(f: FormField): FieldRole {
@@ -84,6 +94,7 @@ export function classify(f: FormField): FieldRole {
   }
   // A long-form question that mentions LinkedIn ("Tell us about your experience on LinkedIn") isn't the URL field.
   if (f.kind === "textarea" && f.label.length > 60) return { type: "question" };
+  if (f.kind === "textarea" && LETTER.test(f.label) && f.label.length <= 40) return { type: "letter" };
   const auto = f.autocomplete.toLowerCase().split(/\s+/);
   const choice = f.kind === "select" || f.kind === "radio";
   for (const r of RULES) {
@@ -137,14 +148,58 @@ export function profileValue(p: Profile, key: ProfileKey): string {
       return p.education[0]?.school.trim() ?? "";
     case "degree":
       return p.education[0]?.degree.trim() ?? "";
+    case "country":
+      return countryOf(p.contact.location);
+    case "summary":
+      return p.summary.trim();
   }
+}
+
+const US_STATES =
+  "al ak az ar ca co ct de fl ga hi id il in ia ks ky la me md ma mi mn ms mo mt ne nv nh nj nm ny nc nd oh ok or pa ri sc sd tn tx ut vt va wa wv wi wy dc " +
+  "alabama alaska arizona arkansas california colorado connecticut delaware florida georgia hawaii idaho illinois indiana iowa kansas kentucky louisiana maine maryland " +
+  "massachusetts michigan minnesota mississippi missouri montana nebraska nevada ohio oklahoma oregon pennsylvania tennessee texas utah vermont virginia washington wisconsin wyoming";
+const US = new Set(US_STATES.split(" "));
+const CA = new Set("on qc bc ab mb sk ns nb nl pe ontario quebec alberta manitoba saskatchewan".split(" "));
+const MULTI = /new (hampshire|jersey|mexico|york)|north (carolina|dakota)|south (carolina|dakota)|rhode island|west virginia|british columbia|nova scotia|new brunswick/i;
+
+/**
+ * The country a location is in: "Chicago, IL" → United States, "Toronto, ON" → Canada, "Berlin, Germany"
+ * → Germany (the last part, as written). "" when it can't tell (a city alone).
+ */
+export function countryOf(location: string): string {
+  const parts = location.split(/[,·]/).map((s) => s.trim()).filter(Boolean);
+  const last = (parts.at(-1) ?? "").replace(/\./g, "");
+  const l = last.toLowerCase();
+  if (parts.length < 2 && !/^(usa|us|united states|canada|uk)$/i.test(last)) return "";
+  if (/^(usa|us|united states( of america)?|america)$/.test(l) || US.has(l) || /^(new (hampshire|jersey|mexico|york)|north (carolina|dakota)|south (carolina|dakota)|rhode island|west virginia)$/.test(l)) return "United States";
+  if (l === "canada" || CA.has(l) || /^(british columbia|nova scotia|new brunswick)$/.test(l)) return "Canada";
+  if (/^(uk|united kingdom|england|scotland|wales|great britain)$/.test(l)) return "United Kingdom";
+  return MULTI.test(last) ? "" : last;
+}
+
+/** How a country may be listed in a dropdown, most likely first. */
+const COUNTRY_NAMES: Record<string, string[]> = {
+  "United States": ["United States", "United States of America", "USA", "US", "U.S."],
+  "United Kingdom": ["United Kingdom", "UK", "Great Britain", "United Kingdom of Great Britain and Northern Ireland"],
+  Canada: ["Canada"],
+};
+
+/** A dropdown option for a value; a country also tries its other names. */
+function optionFor(value: string, options: string[], country: boolean): number {
+  for (const v of country ? (COUNTRY_NAMES[value] ?? [value]) : [value]) {
+    const i = matchOption(v, options);
+    if (i >= 0) return i;
+  }
+  return -1;
 }
 
 /** What to put in one field. `option` is an index into the field's options (select, radio). */
 export type Fill =
   | { id: string; source: "profile"; value: string; option?: number }
   | { id: string; source: "bank"; value: string; option?: number; answerId: string }
-  | { id: string; source: "file"; doc: "resume" | "letter" };
+  | { id: string; source: "file"; doc: "resume" | "letter" }
+  | { id: string; source: "letter"; value: string };
 
 export type Skip = { id: string; reason: "has-value" | "no-answer" | "no-option" | "no-profile-value" | "no-document" | "upload" | "other-company"; company?: string };
 
@@ -168,7 +223,13 @@ export function namesCompany(answer: string, companies: string[]): string | unde
  * `otherCompanies`: your other jobs' companies. A saved answer that names one was written for that job,
  * so it isn't pasted into this one.
  */
-export function planFill(fields: FormField[], profile: Profile, bank: Answer[], docs: { resume: boolean; letter: boolean }, otherCompanies: string[] = []): FillPlan {
+export function planFill(
+  fields: FormField[],
+  profile: Profile,
+  bank: Answer[],
+  docs: { resume: boolean; letter: boolean; letterText?: string },
+  otherCompanies: string[] = [],
+): FillPlan {
   const plan: FillPlan = { fills: [], skipped: [] };
   for (const f of fields) {
     const role = classify(f);
@@ -184,6 +245,11 @@ export function planFill(fields: FormField[], profile: Profile, bank: Answer[], 
     }
     if (f.value.trim()) {
       plan.skipped.push({ id: f.id, reason: "has-value" });
+      continue;
+    }
+    if (role.type === "letter") {
+      if (docs.letterText?.trim()) plan.fills.push({ id: f.id, source: "letter", value: docs.letterText });
+      else plan.skipped.push({ id: f.id, reason: "no-document" });
       continue;
     }
     let value = "";
@@ -206,7 +272,13 @@ export function planFill(fields: FormField[], profile: Profile, bank: Answer[], 
     let option: number | undefined;
     // A searchable dropdown's options only appear once it's open, so the page picks the option there.
     if (CHOICE.has(f.kind) && f.options.length) {
-      option = matchOption(value, f.options);
+      const key = role.type === "profile" ? role.key : null;
+      option = optionFor(value, f.options, key === "country");
+      // A "location" dropdown that lists countries (Lever): your country.
+      if (option < 0 && (key === "location" || key === "city") && countryOf(profile.contact.location)) {
+        value = countryOf(profile.contact.location);
+        option = optionFor(value, f.options, true);
+      }
       if (option < 0) {
         plan.skipped.push({ id: f.id, reason: "no-option" });
         continue;
