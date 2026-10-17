@@ -118,7 +118,10 @@ function createVersions(db: Database.Database) {
 export function migrate(db: Database.Database) {
   const has = (table: string, column: string) => (db.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[]).some((c) => c.name === column);
   if (!has("documents", "meta")) db.exec("ALTER TABLE documents ADD COLUMN meta TEXT NOT NULL DEFAULT '{}'");
-  if (!has("jobs", "last_seen_at")) db.exec("ALTER TABLE jobs ADD COLUMN last_seen_at TEXT");
+  // Columns of a table that exists: has() is false for a missing table too, and ALTER would fail.
+  const cols = (table: string) => (db.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[]).map((c) => c.name);
+  const jobCols = cols("jobs");
+  if (jobCols.length && !jobCols.includes("last_seen_at")) db.exec("ALTER TABLE jobs ADD COLUMN last_seen_at TEXT");
   createVersions(db);
   createAnswers(db);
 }
