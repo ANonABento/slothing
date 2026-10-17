@@ -60,3 +60,8 @@ Made-up test profiles on a copy of the data, real public postings. Not Kevin's a
 | 2026-10-16 | jobs | Extension Save job on Workday (NVIDIA): read in 0.13 s from the rendered page, but the company was the legal entity "IN02 NVIDIA GraphicsPLtd,Pune". | Fixed: the Workday tenant names the company. |
 | 2026-10-16 | pdf | The attached resume was named "Daniel_Okafor,_BSN,_RN,_CCRN_Lakeside_Health.pdf": credentials in the file name a recruiter sees. | Fixed: the name before the first comma. |
 | 2026-10-16 | other | Extension drafts (Nebius DeepSeek) took ~2.4 s for two questions and stayed grounded (bed count, years, CRRT all from the profile). | — |
+| 2026-10-16 | other | Bugbash: a posting whose form renders late (Greenhouse) was recorded on the first report, then "seen before · today" on the second, seconds later. | Fixed: one record per page; visits within 30 min count as one. |
+| 2026-10-16 | other | Bugbash: clicking Submit marked the job applied even when the form refused it (required field empty), and then blocked the real submit from counting. | Fixed: it counts once the page thanks you, the form goes away, or the tab moves on. |
+| 2026-10-16 | other | Bugbash: the job picked on one site's form stayed with the tab and was used for a later form on another site. | Fixed: remembered per site. |
+| 2026-10-16 | jobs | Bugbash: Add job with the link of a posting already in Seen made a duplicate. | Fixed: opens it (and saves it). |
+| 2026-10-16 | other | Bugbash: after reconnecting from the Extension page, an open panel stayed on "Connect" until reopened. | Fixed. |

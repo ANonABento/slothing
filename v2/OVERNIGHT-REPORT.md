@@ -23,6 +23,17 @@ can't), Workday's multi-step apply. 158 tests pass; `tailorJob` now backs both t
 Not done from the plan: a Workday-specific driver (each step fills with Fill form; the job is
 remembered). The floating in-page button became the side panel instead, as you suggested.
 
+### Review and bugbash (round 2)
+
+A code review found 8 issues; a bugbash in Chromium against fixtures and live Greenhouse confirmed and
+fixed them (`FRICTION.md`, 2026-10-16 bugbash rows). Scenarios that now pass: a late-rendering form
+(first visit says New, not Seen); a submit the form refuses (not counted) then a real one (counted once);
+a native form that goes to a thank-you page; recording turned off; a deleted job seen again; Add job with
+a Seen posting's link (opens it, no duplicate); a `#hash` change mid-fill (results kept); auto-detected
+submit then Mark applied (one record); server stopped (badge still works, panel says so); key reset and
+reconnect (panel recovers by itself). Also fixed from review: switching tabs fast could leave the panel
+on the previous tab. 159 tests.
+
 ## Round 1
 
 You asked for: templates removed (Resume design replaced them), then the extension and the answer bank,
