@@ -25,7 +25,7 @@ const NOISE = new Set(
     // Filler that real postings repeat often enough to pass the count (checked against Greenhouse postings).
     "through feature product service software flow solution excited limit clear learn keep just point way show bring idea " +
     "shape grow real live high own existing specific important need one list case guidance creating stage core group term " +
-    "e.g i.e problem technical open tool " +
+    "e.g i.e problem technical open tool self " +
     // Capitalized like tools but never one: currencies, regions, legal, social links.
     "usd gbp eur cad aud inr sgd jpy chf eeo eeoc gdp emea amer apac latam kpi okr faq linkedin youtube instagram twitter facebook tiktok glassdoor"
   ).split(" "),
