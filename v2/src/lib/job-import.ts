@@ -120,8 +120,10 @@ export function greenhouseIds(url: URL): { board: string; id: string } | null {
 /**
  * A company's own career site showing a Greenhouse job: boards to try. A link to the same job id on
  * Greenhouse names the board; with `?gh_jid=…`, the board the page embeds, then the site's name
- * ("careers.airbnb.com" → "airbnb"), which is usually the board.
+ * ("careers.airbnb.com" → "airbnb"), which is usually the board, then names in the path.
  */
+const PATH_WORDS = new Set(["job", "jobs", "job-board", "job-boards", "careers", "career", "positions", "position", "openings", "opening", "search", "apply", "details", "posting", "postings", "open-positions", "company", "embed"]);
+
 export function embeddedGreenhouse(url: URL, html: string): { boards: string[]; id: string } | null {
   // A page that links to its own Greenhouse posting (the job id is in both): "mozilla.org/careers/position/gh/7137777".
   const linked = [...html.matchAll(/greenhouse\.io\/([\w-]+)\/jobs\/(\d{4,})/g)].find((m) => m[1] !== "embed" && url.href.includes(m[2]));
@@ -129,8 +131,10 @@ export function embeddedGreenhouse(url: URL, html: string): { boards: string[]; 
   const id = url.searchParams.get("gh_jid");
   if (!id || !/^\d+$/.test(id)) return null;
   const embedded = html.match(/greenhouse\.io\/embed\/job_board(?:\/js)?\?for=([\w-]+)/)?.[1];
+  // A job-board host names the company in the path instead ("careerpuck.com/job-board/lyft/job/…").
+  const inPath = url.pathname.split("/").filter((p) => /^[a-z][\w-]{2,}$/i.test(p) && !PATH_WORDS.has(p.toLowerCase()));
   const site = url.hostname.split(".").slice(-2)[0];
-  return { boards: [...new Set([embedded, site].filter((b): b is string => Boolean(b)))], id };
+  return { boards: [...new Set([embedded, site, ...inPath].filter((b): b is string => Boolean(b)))].slice(0, 4), id };
 }
 
 const GreenhouseJob = z.object({

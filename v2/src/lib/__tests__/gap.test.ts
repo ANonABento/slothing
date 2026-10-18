@@ -150,6 +150,13 @@ describe("fitOf", () => {
     expect(fit.missing.map((m) => m.toLowerCase())).not.toEqual(expect.arrayContaining(["summer"]));
   });
 
+  it("an analyst has analytics: word families that split at six letters still match", () => {
+    const analyst = { ...profile, summary: "Data analyst. Cohort analysis for a data science team." };
+    const fit = fitOf(analyst, posting("Data Analyst, People Analytics", "People analytics with analytics tools. Analytics, analytics, analytics. Scientists and scientists. TypeScript, Postgres, GraphQL, billing, payments."))!;
+    expect(fit.missing.map((m) => m.toLowerCase())).not.toContain("analytics");
+    expect(fit.missing.map((m) => m.toLowerCase())).not.toContain("scientists");
+  });
+
   it("says nothing without a description or with too little to go on", () => {
     expect(fitOf(profile, posting("Software Engineer", ""))).toBeNull();
     expect(fitOf(profile, posting("Engineer", "Apply now."))).toBeNull();

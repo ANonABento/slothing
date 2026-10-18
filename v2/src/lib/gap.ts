@@ -320,8 +320,13 @@ export function addSource(doc: TailoredResume, src: GapSource): TailoredResume {
 
 export type FitBand = "strong" | "partial" | "weak";
 
-/** A word's first six letters: enough to join "development" and "developer", short words stay whole. */
-const root = (w: string) => (w.length >= 6 ? w.slice(0, 6) : w);
+/**
+ * A word's first six letters: enough to join "development" and "developer", short words stay whole.
+ * A few families split at six ("analytics", "analyst", "analysis"; "science", "scientist") and five
+ * would join unrelated words ("interview", "internal"), so they're listed (dogfood, 2026-10-18).
+ */
+const FAMILIES = ["analy", "scien"];
+const root = (w: string) => FAMILIES.find((f) => w.startsWith(f)) ?? (w.length >= 6 ? w.slice(0, 6) : w);
 
 export interface Fit {
   band: FitBand;
