@@ -1,3 +1,48 @@
+# Overnight report (2026-10-18): Insights v1 and a new-user dogfood
+
+All committed on `v2-rebuild`, nothing pushed. 207 tests pass, typecheck clean.
+
+## Insights v1
+- **What you see:** a strip at the top of Jobs (Active view) with Seen, Saved, Applied, Replies,
+  Interviews and Offers, each shown as a total and "N this week". Counts only: no percentages,
+  comparisons, charts or AI.
+- **How it counts:** each job counts once per stage, in the week it first got there. A reply is any
+  answer after applying, a rejection included. A rejection after an interview still counts as an
+  interview. Applying twice counts as one job applied to. The week starts Monday at midnight, local time.
+  The code is `countInsights` in `src/lib/insights.ts`, built from the status history plus applications
+  (an application counts even if the status never said Applied). 11 tests, passing in 4 time zones.
+- **Checked on real postings, as you asked:** `npm run seed -- <empty folder> [--app <url>]` pulls 40
+  real data and analytics analyst postings from 24 companies' public Greenhouse boards, then makes up
+  a six-week history: 40 seen, 25 saved, 18 applied, 4 replies, 2 interviews, 1 offer. That includes
+  ghosted applications, sent follow-ups, a rejection after an interview, a job applied to twice, and
+  saves at 23:59:59.999 Sunday and 00:00 Monday. It checks every count against the plan at four
+  moments: now, three weeks ago, before any application, and Monday midnight. It also checks the Jobs
+  list and the page as served. All pass.
+- **Screenshots:** `../.context/insights-screens/` (gitignored), desktop 1440 and phone 390, light and
+  dark, for the seeded search and the new user. No horizontal scroll.
+- **One change beside it:** the status line under the strip now reads "Now: 11 seen · …", so it doesn't
+  look like it contradicts "Seen 40".
+- **Not done:** "follow-ups sent" isn't recorded anywhere, so it isn't counted.
+
+## New-user dogfood
+The made-up user is a data analyst in Toronto with an empty database and a resume PDF. Every step ran
+against live sites (details in `FRICTION.md`, 2026-10-18).
+
+| | Result | Fixed |
+|---|---|---|
+| App | Import 8 s, exact. Add job by link 1–2 s. Tailor 11 s, letter 54 s, 1-page PDF | A Lyft (careerpuck) link couldn't be read; fit said an analyst was missing "analytics"; **grounding missed a posting term the AI put in the summary** ("stakeholder"); a false alarm on "interested in applying … to ThoughtSpot" |
+| Extension | Connect in one click; a live Reddit posting went New → Save → Tailor → Fill (8 of 22 fields, resume attached, nothing wrong, never submitted) → Mark applied | "Current (or most recent) company" wasn't filled |
+| MCP | 9 tools; add_job 0.4 s; an agent's draft had every planted problem caught | save_resume required `extras` and `educationIds` |
+
+"tools" and "self" are no longer key terms. Logged but not changed: a parenthetical imported into the
+company name, "Parse resume" being a second click, and company names inside a posting counting as
+missing terms.
+
+## Worth a look
+- The grounding fix makes resumes, letters and answers check 40 posting terms instead of 20, so expect
+  a few more warnings, mostly real ones.
+- Use the seed script on your own data folder only with `--check`. It refuses `v2/data`.
+
 # Overnight report (2026-10-16)
 
 ## Round 2: the side panel (after "pin mode, all-site access, auto-save to Seen")
