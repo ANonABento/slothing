@@ -114,6 +114,8 @@ export interface KeyTerm {
 }
 
 const MAX_TERMS = 20;
+/** Terms the gap draws from (it can show any that's on the resume), so grounding checks the same ones. */
+export const GAP_TERMS = MAX_TERMS * 2;
 // Terms not in your profile at all are the noisiest (boilerplate, place names) and can't be acted on.
 const MAX_MISSING = 8;
 // A word needs this many uses to count, a phrase two: postings repeat filler words twice easily.
@@ -272,7 +274,7 @@ export function keywordGap(profile: Profile, job: Pick<Job, "title" | "descripti
   const inProfile = profileText(profile);
   const used = new Set(ENTRY_KINDS.flatMap((k) => doc[k].flatMap((e) => e.bullets.flatMap((b) => b.sourceIds))));
   const skillsOn = new Set(doc.skills.flatMap((g) => g.items.map((s) => s.toLowerCase())));
-  const all = keyTerms(job, profile.skills.flatMap((g) => g.items), MAX_TERMS * 2).map((term): { term: KeyTerm; status: TermStatus } => {
+  const all = keyTerms(job, profile.skills.flatMap((g) => g.items), GAP_TERMS).map((term): { term: KeyTerm; status: TermStatus } => {
     if (hasTerm(onPage, term.term)) return { term, status: { kind: "on" } };
     if (!hasTerm(inProfile, term.term)) {
       const as = spelledAs(inProfile, term);

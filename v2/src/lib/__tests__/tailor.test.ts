@@ -96,6 +96,13 @@ describe("groundResume", () => {
     expect(warnings[1].message).toContain("“Grafana”");
   });
 
+  it("checks every term the keyword gap can tick, not just the top ones (a summary said \"stakeholder-facing\")", () => {
+    const busy = "Kafka Flink Spark Airflow Looker Tableau Snowflake BigQuery Redshift Databricks Terraform Ansible Jenkins Grafana Prometheus Datadog Splunk Kibana Elasticsearch Cassandra Redis Mongo".split(" ");
+    const job = { title: "Data Analyst", company: "Globex", description: `${busy.map((t) => `${t}. ${t}. ${t}.`).join(" ")} You'll work with stakeholders. Stakeholders rely on you. Every stakeholder matters.` };
+    const { warnings } = groundResume(profile, { ...profileAsTailored(profile), summary: "Engineer comfortable with stakeholder-facing work." }, job);
+    expect(warnings.find((w) => w.where === "summary")?.message).toContain("stakeholder");
+  });
+
   it("orders experience by profile order", () => {
     const { doc } = groundResume(profile, {
       ...profileAsTailored(profile),

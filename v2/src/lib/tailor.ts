@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { hasTerm, keyTerms, spelledAs } from "./gap";
+import { GAP_TERMS, hasTerm, keyTerms, spelledAs } from "./gap";
 import { generateJSON } from "./llm";
 import { withoutHidden } from "./resolve";
 import { CoverLetter, LETTER_LENGTHS, type Answer, Settings, TailoredResume, entriesOf, type EntryKind, type Job, type Latitude, type LetterLength, type LetterSettings, type Profile, type TailoringSettings, type Warning } from "./types";
@@ -61,7 +61,8 @@ export const notIn = (items: string[], where: string) => `${items.join(", ")}, w
  * neither does a term the profile has spelled out or abbreviated.
  */
 export function borrowedTerms(profile: Profile, text: string, job: Pick<Job, "title" | "description" | "company">, facts = profileFacts(profile)): string[] {
-  return keyTerms(job, profile.skills.flatMap((g) => g.items))
+  // Every term the keyword gap might show: one it ticks on the resume must be checked here too.
+  return keyTerms(job, profile.skills.flatMap((g) => g.items), GAP_TERMS)
     .filter((t) => hasTerm(text, t.term) && !hasTerm(facts, t.term) && !hasTerm(job.title, t.term) && !spelledAs(facts, t))
     .map((t) => `“${t.label}”`)
     .slice(0, 3);
