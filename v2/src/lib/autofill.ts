@@ -68,7 +68,7 @@ const RULES: { key: ProfileKey; auto?: string[]; re: RegExp; not?: RegExp }[] = 
   { key: "lastName", auto: ["family-name"], re: /last\s*name|surname|family\s*name|last_name|lname/i },
   { key: "fullName", auto: ["name"], re: /^\W*(full\s*|legal\s*|your\s*)?name\W*$|full[\s_]*name|^candidate[\s_]*name/i, not: /company|school|university|reference|emergency|manager|recruiter|employer|referr|prefer/i },
   { key: "website", auto: ["url"], re: /website|portfolio|personal\s*(site|url|page)|blog/i, not: /company/i },
-  { key: "currentCompany", auto: ["organization"], re: /(current|present|most recent)\s*(company|employer)|^\W*(company|employer)\W*$|company\s*name/i, not: /previous|past|former|why|applying/i },
+  { key: "currentCompany", auto: ["organization"], re: /(current|present|most recent)[\s)]*(company|employer)|^\W*(company|employer)\W*$|company\s*name/i, not: /previous|past|former|why|applying/i },
   { key: "currentTitle", auto: ["organization-title"], re: /(current|present|most recent)\s*(job\s*)?(title|position|role)|^\W*(job\s*)?title\W*$/i, not: /previous|past|desired|applying/i },
   { key: "city", auto: ["address-level2"], re: /^\W*city\W*$|current\s*city|city\s*of\s*residence/i },
   { key: "location", re: /^\W*(current\s*)?location\W*$|what\s*is\s*your\s*(current\s*)?location|where\s*are\s*you\s*(currently\s*)?(based|located)|location\s*\(city/i, not: /preferred|desired|willing|open to/i },

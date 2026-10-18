@@ -32,6 +32,7 @@ describe("classify", () => {
     [{ label: "Website" }, "website"],
     [{ label: "Portfolio link" }, "website"],
     [{ label: "Current company" }, "currentCompany"],
+    [{ label: "Please provide the name of your current (or most recent) company" }, "currentCompany"],
     [{ label: "Current location" }, "location"],
     [{ label: "What is your location?" }, "location"],
     [{ label: "Are you willing to relocate?" }, "question"],
