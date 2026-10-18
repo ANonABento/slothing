@@ -299,7 +299,7 @@ async function checkApp(total: Counts, week: Counts, status: (s: JobStatus) => n
   compare("page: strip", cells, STAGES.map((s, i) => [labels[i], total[s], week[s]]));
   const list = html.match(/<p class="text-sm text-ink-2">([^<]*(?:<!-- -->[^<]*)*)<\/p>/)?.[1]?.replace(/<!-- -->/g, "") ?? "";
   const want = (["seen", "saved", "applied", "interviewing", "offer", "rejected", "archived"] as const).filter((s) => status(s)).map((s) => `${status(s)} ${s}`).join(" · ");
-  compare("page: status counts line", list, want);
+  compare("page: status counts line", list, `Now: ${want}`);
 }
 
 const all = stories();

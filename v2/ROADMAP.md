@@ -193,7 +193,13 @@ per-site scripts unless a site can't be handled any other way.
 - **MCP server** at `/api/mcp` (official SDK, the extension's key): 9 tools over the existing
   operations. An agent can write a resume or letter with its own model and `save_resume` /
   `save_letter`; they go through `tailorJob` (fitter + grounding) and `letterWarnings` like any draft.
-- Next, when there are ~10 real applications: **Insights v1** as counts (see `RESEARCH.md`).
+- **Insights v1** *(done 2026-10-18, ahead of the ~10 applications at Kevin's request)*: a strip on Jobs
+  (Active) with seen, saved, applied, replies, interviews and offers, so far and this week. Each job counts
+  once per stage, in the week it first got there (weeks start Monday at midnight, local); a reply is any
+  answer after applying, a rejection included; applying twice counts once. `countInsights` in
+  `src/lib/insights.ts`, pure and tested. `npm run seed -- <folder>` seeds a six-week search on real
+  Greenhouse postings and checks every count against its plan, the Jobs list and the served page.
+  Not: percentages, comparisons, charts, AI, "follow-ups sent" (not recorded).
 - Candidate, not built: a filter on Jobs → Seen if that list gets long.
 
 ## Iteration 3: self-hosting (others can run it with their own data and keys)

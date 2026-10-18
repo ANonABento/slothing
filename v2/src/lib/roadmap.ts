@@ -35,9 +35,9 @@ export const PLANNED: PlannedPage[] = [
     label: "Insights",
     icon: ChartColumn,
     when: "Later",
-    summary: "Your funnel: saved → applied → interviewing → offer, and which resumes got responses.",
+    summary: "More than the counts on Jobs: how long replies take, and which resumes got responses.",
     v1: "A dashboard and analytics pages.",
-    gate: "There are enough applications for the numbers to mean something.",
+    gate: "The counts on Jobs (Insights v1) stop being enough, and there are enough applications for more to mean something.",
   },
 ];
 

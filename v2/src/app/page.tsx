@@ -76,7 +76,8 @@ export default async function JobsPage({ searchParams }: { searchParams: Promise
                 />
               )}
             </div>
-            {counts.length > 0 && <p className="text-sm text-ink-2">{counts.map(([s, n]) => `${n} ${s}`).join(" · ")}</p>}
+            {/* Where jobs stand now; the Insights strip above counts how far they got. */}
+            {counts.length > 0 && <p className="text-sm text-ink-2">{`Now: ${counts.map(([s, n]) => `${n} ${s}`).join(" · ")}`}</p>}
           </div>
 
           {shown.length === 0 ? (
