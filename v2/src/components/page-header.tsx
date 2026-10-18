@@ -35,7 +35,10 @@ export function PageHeader({
         )}
         {/* At least this wide, so on a phone the actions wrap below rather than squeezing the title. */}
         <div className="min-w-[9rem] flex-1 lg:min-w-0">
-          <h1 className="truncate font-display text-2xl font-bold leading-tight tracking-tight">{title}</h1>
+          {/* Below lg the band grows, so a long title (a job's) gets two lines; on desktop it stays one, inside --bar-h. */}
+          <h1 title={typeof title === "string" ? title : undefined} className="line-clamp-2 break-words font-display text-2xl font-bold leading-tight tracking-tight lg:block lg:truncate">
+            {title}
+          </h1>
           {description && <div className="truncate text-sm text-ink-2">{description}</div>}
         </div>
         {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}

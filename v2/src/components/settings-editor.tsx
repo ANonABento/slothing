@@ -426,8 +426,9 @@ export function SettingsEditor({ initial, providers }: { initial: Settings; prov
       <PageBody>
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[200px_minmax(0,1fr)]">
           {/* Mobile: a segmented row. Desktop: a sticky list beside the content. */}
-          <div className="overflow-x-auto lg:hidden">
-            <SegmentedLinks value={section} options={nav} size="sm" />
+          {/* Wraps rather than scrolls: a scrolling row hid Appearance off the edge on a phone, with nothing to say it was there. */}
+          <div className="lg:hidden">
+            <SegmentedLinks value={section} options={nav} size="sm" className="flex-wrap" />
           </div>
           <nav aria-label="Settings sections" className="hidden lg:block">
             <div className="sticky top-6 space-y-0.5">
