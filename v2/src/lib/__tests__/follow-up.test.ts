@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import Database from "better-sqlite3";
 
-import { FOLLOW_UP_DAYS, createJob, dueFollowUps, getJob, listApplications, migrate, recordApplication, setFollowUp, setJobStatus } from "../db";
+import { FOLLOW_UP_DAYS, createJob, deleteJob, dueFollowUps, getJob, listApplications, listEvents, migrate, recordApplication, setFollowUp, setJobStatus, updateJob } from "../db";
 import { followUpNote } from "../follow-up";
 
 const newJob = () => createJob({ company: "Initech", title: "Platform Engineer", url: "", location: "", description: "" });
@@ -71,5 +71,37 @@ describe("followUpNote", () => {
 
   it("reads fine with nothing but a title", () => {
     expect(followUpNote({ title: "", company: "", appliedAt: null }, "")).toContain("I applied for the open position and");
+  });
+});
+
+describe("status history", () => {
+  it("records the first status and every change, not edits that keep it", () => {
+    const id = newJob();
+    setJobStatus(id, "applied");
+    updateJob(id, { notes: "Referred by Sam" });
+    updateJob(id, { status: "applied" });
+    setJobStatus(id, "interviewing");
+    setJobStatus(id, "rejected");
+    expect(listEvents(id).map((e) => [e.from, e.to])).toEqual([
+      [null, "saved"],
+      ["saved", "applied"],
+      ["applied", "interviewing"],
+      ["interviewing", "rejected"],
+    ]);
+    deleteJob(id);
+    expect(listEvents(id)).toEqual([]);
+  });
+
+  it("migration: jobs from before the history get their current status", () => {
+    const db = new Database(":memory:");
+    db.exec(`CREATE TABLE jobs (id TEXT PRIMARY KEY, status TEXT, updated_at TEXT NOT NULL);
+      CREATE TABLE applications (id TEXT, job_id TEXT, submitted_at TEXT);
+      CREATE TABLE documents (id TEXT, meta TEXT NOT NULL DEFAULT '{}');
+      INSERT INTO jobs VALUES ('a', 'interviewing', '2026-03-01T00:00:00.000Z');`);
+    migrate(db);
+    migrate(db);
+    expect(db.prepare("SELECT job_id, from_status, to_status, at FROM job_events").all()).toEqual([
+      { job_id: "a", from_status: null, to_status: "interviewing", at: "2026-03-01T00:00:00.000Z" },
+    ]);
   });
 });

@@ -144,6 +144,18 @@ function addColumns(db: Database.Database) {
   }
   createVersions(db);
   createAnswers(db);
+  if (jobCols.length && !cols("job_events").length) {
+    db.exec(`CREATE TABLE job_events (
+      id INTEGER PRIMARY KEY,
+      job_id TEXT NOT NULL REFERENCES jobs(id) ON DELETE CASCADE,
+      from_status TEXT,
+      to_status TEXT NOT NULL,
+      at TEXT NOT NULL
+    );
+    CREATE INDEX job_events_job ON job_events(job_id, at);`);
+    // Jobs from before the history existed: where they stand now, as of their last update.
+    db.exec("INSERT INTO job_events (job_id, from_status, to_status, at) SELECT id, NULL, status, updated_at FROM jobs");
+  }
 }
 
 // Survive Next dev hot reloads without leaking connections.
@@ -218,6 +230,7 @@ export function createJob(input: Pick<Job, "company" | "title" | "url" | "locati
   db.prepare(
     "INSERT INTO jobs (id, company, title, url, location, description, status, notes, last_seen_at, visit_started_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, '', ?, ?, ?, ?)",
   ).run(id, input.company, input.title, normalizeUrl(input.url), input.location, input.description, status, status === "seen" ? t : null, status === "seen" ? t : null, t, t);
+  recordEvent(id, null, status, t);
   return id;
 }
 
@@ -264,7 +277,34 @@ export function updateJob(id: string, patch: JobPatch) {
   const params = Object.fromEntries(keys.map((k) => [k, patch[k]]));
   const before = patch.status ? getJob(id)?.status : undefined;
   db.prepare(`UPDATE jobs SET ${sets}, updated_at = @updated_at WHERE id = @id`).run({ ...params, id, updated_at: now() });
-  if (patch.status && patch.status !== before) statusChanged(id, patch.status);
+  if (patch.status && before && patch.status !== before) {
+    recordEvent(id, before, patch.status, now());
+    statusChanged(id, patch.status);
+  }
+}
+
+/* ─── Status history ───
+ * Every status a job has had, and when. Insights needs it: the current status alone can't say whether a
+ * rejected job got an interview first, or how long a reply took.
+ */
+
+function recordEvent(jobId: string, from: JobStatus | null, to: JobStatus, at: string) {
+  db.prepare("INSERT INTO job_events (job_id, from_status, to_status, at) VALUES (?, ?, ?, ?)").run(jobId, from, to, at);
+}
+
+export interface JobEvent {
+  jobId: string;
+  from: JobStatus | null;
+  to: JobStatus;
+  at: string;
+}
+
+/** Status changes, oldest first: one job's, or every job's. */
+export function listEvents(jobId?: string): JobEvent[] {
+  const rows = (jobId
+    ? db.prepare("SELECT job_id, from_status, to_status, at FROM job_events WHERE job_id = ? ORDER BY at, id").all(jobId)
+    : db.prepare("SELECT job_id, from_status, to_status, at FROM job_events ORDER BY at, id").all()) as { job_id: string; from_status: JobStatus | null; to_status: JobStatus; at: string }[];
+  return rows.map((r) => ({ jobId: r.job_id, from: r.from_status, to: r.to_status, at: r.at }));
 }
 
 /* ─── Follow-ups ─── */
