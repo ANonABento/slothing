@@ -65,12 +65,12 @@ export function Sidebar({ llm, due }: { llm: { provider: string; model: string }
         <Link href="/" className="flex min-w-0 shrink-0 items-center gap-2.5">
           <Image src="/brand/slothing-mark.png" alt="" width={32} height={32} className="h-8 w-8 rounded-control" priority />
           <div className="min-w-0 leading-tight">
-            <div className="font-display text-lg font-bold tracking-tight">Slothing</div>
+            <div className="hidden font-display text-lg font-bold tracking-tight min-[360px]:block">Slothing</div>
             <div className="hidden text-xs text-ink-3 lg:block">Job search workspace</div>
           </div>
         </Link>
         {/* Mobile: nav collapses into this row */}
-        {/* Labels from sm up; on a phone the row only fits icons. */}
+        {/* Labels from md up: from sm they ran past the edge (640px wide). Below 360px the mark stands alone. */}
         <nav className="flex min-w-0 items-center gap-1 lg:hidden">
           {GROUPS.flatMap((g) => g.items).map(({ href, label, icon: Icon }) => (
             <Link
@@ -78,10 +78,10 @@ export function Sidebar({ llm, due }: { llm: { provider: string; model: string }
               href={href}
               aria-label={label}
               title={label}
-              className={cx("flex h-9 shrink-0 items-center gap-1.5 rounded-control px-2.5 text-sm font-medium sm:px-3", isActive(path, href) ? "bg-paper text-ink shadow-paper" : "text-ink-2")}
+              className={cx("flex h-9 shrink-0 items-center gap-1.5 rounded-control px-2.5 text-sm font-medium md:px-3", isActive(path, href) ? "bg-paper text-ink shadow-paper" : "text-ink-2")}
             >
               <Icon className="h-4 w-4" />
-              <span className="hidden sm:inline">{label}</span>
+              <span className="hidden md:inline">{label}</span>
             </Link>
           ))}
           <ThemeToggle />

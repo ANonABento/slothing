@@ -54,7 +54,8 @@ function FollowUpRow({ job, name }: { job: Job; name: string }) {
   };
   return (
     <li className="flex flex-wrap items-center gap-x-4 gap-y-2 py-3 first:pt-0 last:pb-0">
-      <Link href={`/jobs/${job.id}`} className="min-w-0 flex-1 hover:underline">
+      {/* At least 16rem: below that the buttons wrap under the title instead of truncating it to a few words. */}
+      <Link href={`/jobs/${job.id}`} className="min-w-[min(16rem,100%)] flex-1 hover:underline">
         <div className="truncate font-medium">{job.title || "Untitled role"}</div>
         <div className="truncate text-sm text-ink-2">
           {job.company || "Unknown company"}
