@@ -159,6 +159,8 @@ describe("letterWarnings", () => {
     const job = { title: "Platform Engineer", company: "Globex", description: "Kubernetes, Kubernetes, Kubernetes and GraphQL." };
     expect(letterWarnings(profile, letter("While my experience is in TypeScript, I am eager to apply it to Kubernetes."), job)).toEqual([]);
     expect(letterWarnings(profile, letter("I am new to Kubernetes but learn quickly."), job)).toEqual([]);
+    expect(letterWarnings(profile, letter("I'm interested in applying that experience to Kubernetes and its operators."), job)).toEqual([]);
+    expect(letterWarnings(profile, letter("I'm interested in Kubernetes and have run it for years."), job)).not.toEqual([]);
     expect(letterWarnings(profile, letter("I am excited to bring my Kubernetes experience."), job)[0]?.message).toMatch(/Kubernetes/);
   });
 

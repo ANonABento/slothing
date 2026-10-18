@@ -390,9 +390,9 @@ export async function writeCoverLetter(
 }
 
 // A sentence about wanting to learn something isn't a claim to have it ("eager to apply my backend
-// fundamentals to Ruby", "new to GraphQL"). "Excited to bring my Ruby experience" still is.
+// fundamentals to Ruby", "interested in applying that to ThoughtSpot", "new to GraphQL"). "Excited to bring my Ruby experience" still is.
 const LEARNING =
-  /\b(eager|excited|keen|looking forward|hoping|hope|want|would (love|like))\s+to\s+(learn|apply|grow|develop|deepen|build on|pick up|get better|ramp up)\b|\b(learning|new to|not yet|haven't (yet )?(used|worked)|have not (yet )?(used|worked)|ramp(ing)? up on)\b/i;
+  /\b(eager|excited|keen|looking forward|hoping|hope|want|would (love|like))\s+to\s+(learn|apply|grow|develop|deepen|build on|pick up|get better|ramp up)\b|\b(interested in|keen on|looking forward to|excited about)\s+(learning|applying|growing|picking up|getting better|ramping up)\b|\b(learning|new to|not yet|haven't (yet )?(used|worked)|have not (yet )?(used|worked)|ramp(ing)? up on)\b/i;
 
 /**
  * Numbers in a letter must come from the profile. The posting only vouches for years ("Winter 2027 term"):
