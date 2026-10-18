@@ -180,6 +180,20 @@ export function ExtensionSetup({
               </ul>
             </Card>
             <Card className="p-5">
+              <Eyebrow className="mb-1">Agents · MCP</Eyebrow>
+              <CardTitle className="mb-1">Use Slothing from Claude Code, Codex or Cursor</CardTitle>
+              <p className="mb-3 text-sm text-ink-2">
+                Your agent can list your jobs, add one, update a status, and tailor or write with Slothing&apos;s AI. Or it writes the resume or letter with its own model
+                and Slothing checks and saves it, with the same rules as here. It can&apos;t delete anything or submit an application. Uses the same key as the extension.
+              </p>
+              {origin && (
+                <CopyText text={`claude mcp add --transport http slothing ${origin}/api/mcp --header "Authorization: Bearer ${connectionKey}"`} label="Copy the Claude Code command">
+                  claude mcp add --transport http slothing {origin}/api/mcp --header &quot;Authorization: Bearer {"•".repeat(8)}&quot;
+                </CopyText>
+              )}
+              <p className="mt-2 text-xs text-ink-3">Other agents: the URL {origin}/api/mcp with the header Authorization: Bearer and your key.</p>
+            </Card>
+            <Card className="p-5">
               <label className="flex cursor-pointer items-start gap-3">
                 <input type="checkbox" checked={autoSaveOn} onChange={(e) => toggleAutoSave(e.target.checked)} disabled={savingAuto} className="mt-1 accent-[var(--brand)]" />
                 <span>

@@ -4,9 +4,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import * as db from "@/lib/db";
-import { jobForUrl, resetExtensionKey } from "@/lib/extension";
+import { addJob, resetExtensionKey } from "@/lib/extension";
 import { extractText, parseResumeText, reuseIds } from "@/lib/import";
-import { readJob } from "@/lib/job-import";
 import { listModels, saveKey, testLlm } from "@/lib/llm";
 import { tailorJob, writeLetter } from "@/lib/tailor-job";
 import { draftAnswers, groundResume, letterWarnings, rewordBullet, type DraftAnswer, type Rewording } from "@/lib/tailor";
@@ -122,14 +121,7 @@ export async function addJobAction(_prev: Result | null, form: FormData): Promis
   const field = (k: string) => String(form.get(k) ?? "");
   let id: string;
   try {
-    // A posting you already have (often one the extension recorded as Seen) opens instead of being added twice.
-    const existing = field("url").trim() ? jobForUrl(field("url")) : null;
-    if (existing) {
-      if (existing.status === "seen") db.setJobStatus(existing.id, "saved");
-      // Seen in passing without a description (LinkedIn): take the one you pasted.
-      if (!existing.description.trim() && field("description").trim()) db.updateJob(existing.id, { description: field("description").trim() });
-      id = existing.id;
-    } else id = db.createJob(await readJob({ url: field("url"), description: field("description"), company: field("company"), title: field("title") }));
+    id = await addJob({ url: field("url"), description: field("description"), company: field("company"), title: field("title") });
   } catch (e) {
     return fail(e);
   }

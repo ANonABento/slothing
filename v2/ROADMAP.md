@@ -186,6 +186,16 @@ per-site scripts unless a site can't be handled any other way.
 5. **Pass:** a table in `FRICTION.md` per platform with fields filled / left, and no wrong value in a
    field (a wrong value is worse than an empty one).
 
+### G. Status history and MCP (2026-10-18, from `RESEARCH.md`) — done
+
+- **Status history** (`job_events`): every status a job has had, and when. Nothing shows it yet; it's
+  what Insights will count.
+- **MCP server** at `/api/mcp` (official SDK, the extension's key): 9 tools over the existing
+  operations. An agent can write a resume or letter with its own model and `save_resume` /
+  `save_letter`; they go through `tailorJob` (fitter + grounding) and `letterWarnings` like any draft.
+- Next, when there are ~10 real applications: **Insights v1** as counts (see `RESEARCH.md`).
+- Candidate, not built: a filter on Jobs → Seen if that list gets long.
+
 ## Iteration 3: self-hosting (others can run it with their own data and keys)
 
 The data is already one SQLite file (`SLOTHING_DATA_DIR`) and the keys are already the user's own,

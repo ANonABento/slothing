@@ -47,6 +47,19 @@ locally (posting, application form, sign-in) and shows it as the icon's badge: *
 Only postings are sent to the app, and only to this app (a key from the Extension page; no CORS, so
 websites can't read the API). Turn off recording on the Extension page.
 
+### Agents (MCP)
+
+Slothing is also an MCP server at `/api/mcp`, for Claude Code, Codex, Cursor and other agents. The
+Extension page has the command (it carries the extension's key), e.g.
+
+```bash
+claude mcp add --transport http slothing http://localhost:3000/api/mcp --header "Authorization: Bearer <key>"
+```
+
+Tools: `get_profile`, `list_jobs`, `get_job`, `add_job`, `set_status`, `tailor_resume`, `write_letter`, and
+`save_resume` / `save_letter` for drafts the agent writes with its own model. Those go through the same
+fitter and grounding as everything else. No tool deletes or submits.
+
 ### With Docker
 
 ```bash

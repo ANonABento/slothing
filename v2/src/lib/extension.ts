@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import { FormField, planFill, proposeAnswers, type AnswerProposal, type Fill, type Skip } from "./autofill";
 import * as db from "./db";
-import { importJobFromPage, linkedInJobId, linkedInTitle, parsePostingUrl, postingKey } from "./job-import";
+import { importJobFromPage, linkedInJobId, linkedInTitle, parsePostingUrl, postingKey, readJob } from "./job-import";
 import { llmConfigured } from "./llm";
 import { draftAnswers, type DraftAnswer } from "./tailor";
 import { fitOf, type Fit } from "./gap";
@@ -76,7 +76,7 @@ export interface JobSummary {
   appliedAt: string | null;
 }
 
-function summary(j: Job): JobSummary {
+export function summary(j: Job): JobSummary {
   const resume = db.getDoc(j.id, "resume");
   const letter = db.getDoc(j.id, "cover_letter");
   return {
@@ -92,6 +92,20 @@ function summary(j: Job): JobSummary {
     lastSeenAt: j.lastSeenAt,
     appliedAt: db.listApplications(j.id)[0]?.submittedAt ?? null,
   };
+}
+
+/**
+ * Add a job from a link, a pasted description or both (the Add job form and MCP). A posting you already
+ * have (often one the extension recorded as Seen) is returned instead of added twice. Returns its id.
+ */
+export async function addJob(input: { url?: string; description?: string; company?: string; title?: string }): Promise<string> {
+  const f = { url: input.url ?? "", description: input.description ?? "", company: input.company ?? "", title: input.title ?? "" };
+  const existing = f.url.trim() ? jobForUrl(f.url) : null;
+  if (!existing) return db.createJob(await readJob(f));
+  if (existing.status === "seen") db.setJobStatus(existing.id, "saved");
+  // Seen in passing without a description (LinkedIn): take the one you pasted.
+  if (!existing.description.trim() && f.description.trim()) db.updateJob(existing.id, { description: f.description.trim() });
+  return existing.id;
 }
 
 /** The saved job a page belongs to: the posting itself, or its application form. */
