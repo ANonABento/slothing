@@ -39,9 +39,9 @@ const Entry = z.object({ sourceId: z.string().describe("The profile entry's id")
 const ResumeDraft = z.object({
   summary: z.string(),
   experience: z.array(Entry),
-  projects: z.array(Entry),
-  extras: z.array(Entry).describe("Entries from the profile's other sections, by entry id"),
-  educationIds: z.array(z.string()),
+  projects: z.array(Entry).optional(),
+  extras: z.array(Entry).optional().describe("Entries from the profile's other sections, by entry id"),
+  educationIds: z.array(z.string()).optional().describe("The profile education entries to show; leave out for all of them"),
   skills: z.array(z.object({ category: z.string(), items: z.array(z.string()) })),
 });
 const LetterDraft = z.object({ greeting: z.string(), paragraphs: z.array(z.string()), closing: z.string() });
@@ -143,7 +143,13 @@ export function buildServer(): McpServer {
       inputSchema: z.object({ id: z.string(), resume: ResumeDraft, agent }),
       annotations: WRITE,
     },
-    ({ id, resume, agent }) => run(async () => ({ warnings: await tailorJob(needJob(id).id, true, { doc: TailoredResume.parse(resume), by: agent || "Your agent" }) })),
+    ({ id, resume, agent }) =>
+      run(async () => {
+        // Agents often leave out what they didn't change: no projects or extras, and every degree.
+        const educationIds = resume.educationIds ?? db.getProfile().education.map((e) => e.id);
+        const doc = TailoredResume.parse({ ...resume, educationIds });
+        return { warnings: await tailorJob(needJob(id).id, true, { doc, by: agent || "Your agent" }) };
+      }),
   );
 
   server.registerTool(

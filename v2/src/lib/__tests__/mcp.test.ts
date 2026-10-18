@@ -61,6 +61,16 @@ describe("MCP server", () => {
     expect(doc.data.skills.flatMap((g) => g.items)).not.toContain("Rust");
   });
 
+  it("a draft may leave out projects, other sections and education: education then stays as in the profile", async () => {
+    const exp = profile.experience[0];
+    const r = await tool("save_resume", {
+      id: jobId,
+      resume: { summary: "", experience: [{ sourceId: exp.id, bullets: [{ text: exp.bullets[0].text, sourceIds: [exp.bullets[0].id] }] }], skills: [] },
+    });
+    expect(r.isError).toBe(false);
+    expect(getDoc(jobId, "resume")!.data.educationIds).toEqual(profile.education.map((e) => e.id));
+  });
+
   it("an agent's letter is checked like any letter", async () => {
     const r = await tool("save_letter", { id: jobId, letter: { greeting: "Hi,", paragraphs: ["I led 75 engineers."], closing: "Best," } });
     expect(r.text).toMatch(/75/);
