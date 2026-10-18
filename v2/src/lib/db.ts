@@ -494,6 +494,11 @@ export function listApplications(jobId: string): Application[] {
   }));
 }
 
+/** When each application was sent, every job's: what Insights counts. */
+export function listApplicationDates(): { jobId: string; submittedAt: string }[] {
+  return db.prepare("SELECT job_id AS jobId, submitted_at AS submittedAt FROM applications").all() as { jobId: string; submittedAt: string }[];
+}
+
 /** The latest saved version of a document, for an application to point at. */
 const latestVersion = (jobId: string, kind: DocKind) =>
   (db.prepare("SELECT id FROM document_versions WHERE job_id = ? AND kind = ? ORDER BY created_at DESC, rowid DESC LIMIT 1").get(jobId, kind) as { id: string } | undefined)?.id ?? null;

@@ -10,7 +10,8 @@
     "test": "vitest run",
     "engines": "bash scripts/setup-engines.sh",
     "v1": "bash scripts/run-v1.sh",
-    "extension": "node extension/build.mjs"
+    "extension": "node extension/build.mjs",
+    "seed": "node scripts/ts.mjs scripts/seed-search.ts"
   },
   "dependencies": {
     "@modelcontextprotocol/server": "^2.3.1",

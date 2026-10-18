@@ -3,12 +3,14 @@ import Link from "next/link";
 
 import { AddJob } from "@/components/add-job";
 import { FollowUps } from "@/components/follow-ups";
+import { InsightsStrip } from "@/components/insights-strip";
 import { PageBody, PageHeader } from "@/components/page-header";
 import { Card, EmptyState, Eyebrow, FitChip, StatusPill, cx } from "@/components/ui";
 import { SegmentedLinks } from "@/components/segmented-links";
-import { dueFollowUps, getProfile, listJobs } from "@/lib/db";
+import { dueFollowUps, getProfile, listApplicationDates, listEvents, listJobs } from "@/lib/db";
 import { ago } from "@/lib/format";
 import { fitOf, type Fit } from "@/lib/gap";
+import { countInsights } from "@/lib/insights";
 import { llmConfigured } from "@/lib/llm";
 import { settingsHref } from "@/lib/settings-sections";
 import { JOB_STATUSES, type Job } from "@/lib/types";
@@ -57,6 +59,7 @@ export default async function JobsPage({ searchParams }: { searchParams: Promise
       <PageBody>
         <div className="space-y-4">
           {(profileEmpty || !llmConfigured()) && <SetupCard profileEmpty={profileEmpty} llm={llmConfigured()} />}
+          {view === "active" && jobs.length > 0 && <InsightsStrip insights={countInsights(jobs, listEvents(), listApplicationDates())} />}
           {view === "active" && <FollowUps jobs={dueFollowUps()} name={profile.contact.name} />}
 
           <div className="flex flex-wrap items-center justify-between gap-3">
