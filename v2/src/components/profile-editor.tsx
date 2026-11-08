@@ -3,7 +3,7 @@
 import { safe } from "@/lib/safe";
 import { settingsHref } from "@/lib/settings-sections";
 import { Check, FileUp, Plus, Sparkles, UserRound } from "lucide-react";
-import { useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 
 import { importResumeAction, saveProfileAction } from "@/app/actions";
 import type { Bullet, ContactLink, ExtraEntry, ExtraSection, Profile } from "@/lib/types";
@@ -156,7 +156,7 @@ function ImportPanel({ hasData, onImported }: { hasData: boolean; onImported: (p
         }}
         className="space-y-3"
       >
-        <input type="file" name="file" aria-label="Resume file" accept=".pdf,.docx,.txt,.md" className="block text-sm text-ink-2 file:mr-3 file:h-9 file:rounded-control file:border file:border-ink file:bg-transparent file:px-3 file:text-sm file:font-medium file:text-ink" />
+        <input type="file" name="file" aria-label="Resume file" onChange={(e) => e.currentTarget.files?.length && formRef.current?.requestSubmit()} accept=".pdf,.docx,.txt,.md" className="block text-sm text-ink-2 file:mr-3 file:h-9 file:rounded-control file:border file:border-ink file:bg-transparent file:px-3 file:text-sm file:font-medium file:text-ink" />
         <Textarea name="text" rows={4} className="max-h-[40vh]" value={text} onChange={(e) => setText(e.target.value)} aria-label="Resume text" placeholder="…or paste resume text here" />
         {error && <p className="text-sm text-warn">{error}</p>}
         <div className="flex gap-2">
@@ -176,6 +176,14 @@ export function ProfileEditor({ initial }: { initial: Profile }) {
   const [pending, start] = useTransition();
   const dirty = JSON.stringify(p) !== JSON.stringify(saved);
   const hasData = Boolean(saved.contact.name || saved.experience.length);
+  // Unsaved changes (an import, or edits) are previewed as you go, a moment after you stop typing.
+  const [draft, setDraft] = useState<string | undefined>();
+  const draftOf = dirty && (p.contact.name || p.experience.length) ? JSON.stringify(p) : undefined;
+  useEffect(() => {
+    if (!draftOf) return setDraft(undefined);
+    const t = setTimeout(() => setDraft(draftOf), 800);
+    return () => clearTimeout(t);
+  }, [draftOf]);
 
   const set = <K extends keyof Profile>(k: K, v: Profile[K]) => setP((prev) => ({ ...prev, [k]: v }));
   const setContact = (k: keyof Profile["contact"], v: string) => set("contact", { ...p.contact, [k]: v });
@@ -396,11 +404,11 @@ export function ProfileEditor({ initial }: { initial: Profile }) {
       </div>
 
       <PreviewPane>
-        <Eyebrow className="mb-2">Base resume · everything except hidden</Eyebrow>
-        {hasData ? (
-          <PdfPreview query="kind=resume" version={version} settings={{ href: settingsHref("layout", "/profile"), label: "Design" }} />
+        <Eyebrow className="mb-2">{draft ? "Unsaved · save to keep it" : "Base resume · everything except hidden"}</Eyebrow>
+        {hasData || draft ? (
+          <PdfPreview query="kind=resume" version={version} draft={draft} settings={{ href: settingsHref("layout", "/profile"), label: "Design" }} />
         ) : (
-          <PreviewEmpty>Import or fill in your profile, save, and a preview appears here.</PreviewEmpty>
+          <PreviewEmpty>Import or fill in your profile and a preview appears here.</PreviewEmpty>
         )}
       </PreviewPane>
     </div>

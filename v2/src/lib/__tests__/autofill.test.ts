@@ -75,6 +75,10 @@ describe("profileValue", () => {
     expect(profileValue(nurse, "currentCompany")).toBe("Mercy");
     expect(profileValue(profile, "currentCompany")).toBe("Acme & Co");
     expect(profileValue(Profile.parse({ experience: [{ id: "e", company: "Old", title: "x", end: "2020" }] }), "currentCompany")).toBe("");
+    const at = (company: string) => profileValue(Profile.parse({ experience: [{ id: "e", company, title: "x", end: "Present" }] }), "currentCompany");
+    expect(at("Maplecart (grocery delivery)")).toBe("Maplecart");
+    expect(at("Acme (Series B)  ")).toBe("Acme");
+    expect(at("(stealth)")).toBe("(stealth)");
   });
   it("takes the city from the location", () => expect(profileValue(profile, "city")).toBe("Toronto"));
 });

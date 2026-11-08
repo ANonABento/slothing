@@ -141,7 +141,8 @@ export function profileValue(p: Profile, key: ProfileKey): string {
     case "website":
       return withScheme(p.contact.links.find((l) => l.url && !/linkedin\.com|github\.com|twitter\.com|(^|\/\/|\.)x\.com/i.test(l.url))?.url ?? "");
     case "currentCompany":
-      return current?.company.trim() ?? "";
+      // "Maplecart (grocery delivery)": the resume's aside, not the company's name. Kept when it's all there is.
+      return current?.company.replace(/\s*\([^)]*\)\s*$/, "").trim() || current?.company.trim() || "";
     case "currentTitle":
       return current?.title.trim() ?? "";
     case "school":

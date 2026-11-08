@@ -64,7 +64,7 @@ function PdfPage({ pdf, n, width }: { pdf: Pdf; n: number; width: number }) {
  * Fetches the PDF and draws it with pdf.js (bundled in unpdf) instead of the browser's PDF viewer,
  * so the frame is exactly the paper: no viewer chrome or backdrop around the page.
  */
-function PdfFrame({ src, title, className, onPages }: { src: string; title: string; className?: string; onPages?: (n: number) => void }) {
+function PdfFrame({ src, body, title, className, onPages }: { src: string; body?: string; title: string; className?: string; onPages?: (n: number) => void }) {
   const [frame, width] = useWidth<HTMLDivElement>();
   const [state, setState] = useState<{ pdf: Pdf | null; error: string | null; loading: boolean }>({ pdf: null, error: null, loading: true });
 
@@ -72,7 +72,7 @@ function PdfFrame({ src, title, className, onPages }: { src: string; title: stri
     let cancelled = false;
     setState((s) => ({ ...s, loading: true, error: null }));
     (async () => {
-      const res = await fetch(src);
+      const res = await fetch(src, body ? { method: "POST", body, headers: { "content-type": "application/json" } } : undefined);
       if (!res.ok) throw new Error((await res.text()).slice(0, 1200));
       const data = new Uint8Array(await res.arrayBuffer());
       const { getDocumentProxy } = await import("unpdf");
@@ -84,7 +84,7 @@ function PdfFrame({ src, title, className, onPages }: { src: string; title: stri
     return () => {
       cancelled = true;
     };
-  }, [src]);
+  }, [src, body]);
 
   // Free the previous document once a newer one has replaced it.
   useEffect(() => () => void state.pdf?.loadingTask.destroy(), [state.pdf]);
@@ -135,8 +135,11 @@ export function PdfPreview({
   version,
   settings,
   maxPages,
+  draft,
 }: {
   query: string;
+  /** An unsaved profile as JSON, previewed instead of the saved one (no Source or PDF links: those serve what's saved). */
+  draft?: string;
   version: number | string;
   settings?: { href: string; label: string };
   /** Warn when the document runs longer (the Page length setting). */
@@ -153,12 +156,14 @@ export function PdfPreview({
             <SlidersHorizontal className="h-3.5 w-3.5" /> {settings.label}
           </Link>
         )}
+        {!draft && <>
         <a href={src("&source=1")} target="_blank" rel="noreferrer" className={buttonClass("ghost", "sm", "ml-auto")}>
           <Code2 className="h-3.5 w-3.5" /> Source
         </a>
         <a href={src("&download=1")} className={buttonClass("secondary", "sm")}>
           <Download className="h-3.5 w-3.5" /> PDF
         </a>
+        </>}
       </div>
       {maxPages && pages > maxPages ? (
         <p className="flex items-center gap-2 rounded-control border border-warn bg-warn-soft px-3 py-2 text-sm text-warn">
@@ -166,7 +171,7 @@ export function PdfPreview({
           Runs to {pages} pages; your page length is {maxPages}. Remove a bullet, or re-tailor to fit.
         </p>
       ) : null}
-      <PdfFrame title="Preview" src={src()} className="min-h-0" onPages={setPages} />
+      <PdfFrame title="Preview" src={src()} body={draft} className="min-h-0" onPages={setPages} />
     </div>
   );
 }

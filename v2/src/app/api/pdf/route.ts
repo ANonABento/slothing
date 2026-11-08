@@ -3,7 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getDoc, getJob, getProfile, getSettings, getVersion } from "@/lib/db";
 import { renderPdf, renderSource, type RenderInput } from "@/lib/render";
 import { profileAsTailored, resolveLetter, resolveResume } from "@/lib/resolve";
-import { Settings } from "@/lib/types";
+import { Profile, Settings } from "@/lib/types";
 
 export const runtime = "nodejs";
 
@@ -69,4 +69,25 @@ export async function GET(req: NextRequest) {
   return new NextResponse(new Uint8Array(pdf), {
     headers: { "content-type": "application/pdf", "content-disposition": disposition, "cache-control": "no-store" },
   });
+}
+
+/**
+ * POST /api/pdf with an unsaved profile as JSON: previews it as the untailored resume, so an import
+ * can be checked on the page before it's kept. Nothing is stored.
+ */
+export async function POST(req: NextRequest) {
+  let body: unknown;
+  try {
+    body = await req.json();
+  } catch {}
+  const parsed = Profile.safeParse(body);
+  if (!parsed.success) return NextResponse.json({ error: "bad profile" }, { status: 400 });
+  const profile = parsed.data;
+  const input: RenderInput = { kind: "resume", data: resolveResume(profile, profileAsTailored(profile), getSettings().resume) };
+  try {
+    const pdf = await renderPdf(input);
+    return new NextResponse(new Uint8Array(pdf), { headers: { "content-type": "application/pdf", "cache-control": "no-store" } });
+  } catch (e) {
+    return new NextResponse(`Render failed:\n\n${(e as Error).message}`, { status: 500, headers: { "content-type": "text/plain" } });
+  }
 }
