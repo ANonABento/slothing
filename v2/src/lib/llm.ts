@@ -1,3 +1,6 @@
+import { spawn, spawnSync } from "node:child_process";
+import { tmpdir } from "node:os";
+
 import { z } from "zod";
 
 import { getKv, getSettings, setKv } from "./db";
@@ -14,6 +17,8 @@ const PROVIDER_INFO: Record<Provider, { label: string; keyEnv: string; modelEnv:
   anthropic: { label: "Anthropic", keyEnv: "ANTHROPIC_API_KEY", modelEnv: "ANTHROPIC_MODEL", defaultModel: "claude-sonnet-5-5", defaultBase: "https://api.anthropic.com/v1" },
   nebius: { label: "Nebius", keyEnv: "NEBIUS_API_KEY", modelEnv: "NEBIUS_MODEL", defaultModel: "moonshotai/Kimi-K3", baseEnv: "NEBIUS_BASE_URL", defaultBase: "https://api.studio.nebius.com/v1" },
   openai: { label: "OpenAI", keyEnv: "OPENAI_API_KEY", modelEnv: "OPENAI_MODEL", defaultModel: "gpt-5", baseEnv: "OPENAI_BASE_URL", defaultBase: "https://api.openai.com/v1" },
+  // Your Claude plan, through the claude command. Its "key" is the command, set only when it runs (see claudeCli).
+  claude: { label: "Claude Code", keyEnv: "CLAUDE_CODE_CLI", modelEnv: "CLAUDE_CODE_MODEL", defaultModel: "sonnet", defaultBase: "" },
 };
 
 type Env = Record<string, string | undefined>;
@@ -37,7 +42,18 @@ export function withStoredKeys(env: Env, stored: Partial<Record<Provider, string
   return out;
 }
 
-const keyEnv = () => withStoredKeys(process.env, storedKeys());
+// shortcut: checked once per server start, so installing Claude Code later needs a restart.
+let cli: string | undefined;
+/** The claude command if it runs here (CLAUDE_CODE_CLI can point at it), else "". */
+function claudeCli(): string {
+  if (cli === undefined) {
+    const cmd = process.env.CLAUDE_CODE_CLI?.trim() || "claude";
+    cli = spawnSync(cmd, ["--version"], { timeout: 10_000 }).status === 0 ? cmd : "";
+  }
+  return cli;
+}
+
+const keyEnv = () => withStoredKeys({ ...process.env, CLAUDE_CODE_CLI: claudeCli() }, storedKeys());
 
 export interface LlmConfig {
   provider: Provider;
@@ -94,8 +110,10 @@ export function resolveLlm(ai: AiSettings, env: Env = keyEnv()): { config: LlmCo
   const local = openaiBase(ai, status);
   const ok = (s: ProviderStatus) => usable(s, local);
   const chosen = ai.provider ? status.find((s) => s.provider === ai.provider)! : null;
-  const pick = chosen && ok(chosen) ? chosen : status.find(ok);
-  const warning = chosen && !ok(chosen) ? `${chosen.label} is selected but has no API key${pick ? `, so ${pick.label} is used instead` : ""}.` : null;
+  // Automatic skips Claude Code: it runs on your plan only when you choose it.
+  const pick = chosen && ok(chosen) ? chosen : status.find((s) => s.provider !== "claude" && ok(s));
+  const missing = chosen?.provider === "claude" ? "the claude command isn't installed" : "has no API key";
+  const warning = chosen && !ok(chosen) ? `${chosen.label} is selected but ${missing}${pick ? `, so ${pick.label} is used instead` : ""}.` : null;
   if (!pick) return { config: null, warning };
   const p = pick.provider;
   const base = p === "openai" ? local : pick.defaultBase;
@@ -138,7 +156,7 @@ export function llmConfigured() {
 const TIMEOUT_MS = 120_000;
 // A model on a laptop is slow: give it longer.
 const LOCAL_TIMEOUT_MS = 300_000;
-const timeoutOf = (c: LlmConfig) => (isLocalEndpoint(c.base) ? LOCAL_TIMEOUT_MS : TIMEOUT_MS);
+const timeoutOf = (c: LlmConfig) => (c.provider === "claude" || isLocalEndpoint(c.base) ? LOCAL_TIMEOUT_MS : TIMEOUT_MS);
 
 /** Pull a short human-readable message out of a provider error body instead of dumping it raw. */
 async function providerError(provider: string, res: Response): Promise<Error> {
@@ -159,7 +177,33 @@ async function providerError(provider: string, res: Response): Promise<Error> {
   return new Error(`${provider} error ${res.status}: ${String(msg).slice(0, 200)}${hint}`);
 }
 
+/** One answer from `claude -p` on your Claude plan: no tools, MCP servers, settings or sessions. */
+function claudeCode(c: LlmConfig, system: string, user: string): Promise<string> {
+  // Without ANTHROPIC_API_KEY, Claude Code uses your claude.ai login, so the call counts against your plan.
+  const { ANTHROPIC_API_KEY: _key, ...env } = process.env;
+  const args = ["-p", "--output-format", "json", "--model", c.model, "--system-prompt", system, "--tools", "", "--strict-mcp-config", "--setting-sources", "", "--disable-slash-commands", "--no-session-persistence"];
+  return new Promise((resolve, reject) => {
+    const child = spawn(c.key, args, { cwd: tmpdir(), env, timeout: timeoutOf(c) });
+    let out = "";
+    let err = "";
+    child.stdout.on("data", (d) => (out += d));
+    child.stderr.on("data", (d) => (err += d));
+    child.on("error", (e) => reject(new Error(`Can't run Claude Code: ${e.message}`)));
+    child.on("close", (code, signal) => {
+      if (signal) return reject(Object.assign(new Error("timeout"), { name: "TimeoutError" }));
+      let r: { is_error?: boolean; result?: string } | null = null;
+      try {
+        r = JSON.parse(out);
+      } catch {}
+      if (code === 0 && r && !r.is_error) return resolve(r.result ?? "");
+      reject(new Error(`Claude Code error: ${String(r?.result || err || out).trim().slice(0, 200)} Run claude in a terminal to check you're signed in.`));
+    });
+    child.stdin.end(user);
+  });
+}
+
 async function complete(c: LlmConfig, system: string, user: string): Promise<string> {
+  if (c.provider === "claude") return claudeCode(c, system, user);
   if (c.provider === "anthropic") {
     const res = await fetch(`${c.base}/messages`, {
       method: "POST",

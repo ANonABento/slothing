@@ -92,7 +92,7 @@ export async function saveApiKeyAction(provider: string, key: string): Promise<R
   try {
     const k = z.string().max(500).parse(key).trim();
     if (/\s/.test(k)) return { ok: false, error: "That key has spaces in it. Paste only the key." };
-    saveKey(z.enum(PROVIDERS).parse(provider), k);
+    saveKey(z.enum(PROVIDERS).exclude(["claude"]).parse(provider), k);
     revalidatePath("/", "layout");
     return { ok: true };
   } catch (e) {

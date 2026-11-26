@@ -227,7 +227,7 @@ export interface StoredDoc<T> {
 
 /* ─── Settings: one row, every field defaulted so an empty row means "today's behavior" ─── */
 
-export const PROVIDERS = ["anthropic", "nebius", "openai"] as const;
+export const PROVIDERS = ["anthropic", "nebius", "openai", "claude"] as const;
 export type Provider = (typeof PROVIDERS)[number];
 
 export const LATITUDES = ["select", "rephrase", "rewrite"] as const;
@@ -403,11 +403,11 @@ export const Settings = z.object({
       /** null: use the first provider that has a key. */
       provider: z.enum(PROVIDERS).nullable().default(null),
       /** Per provider, so switching back and forth keeps each choice. "" means the env/default model. */
-      models: z.object({ anthropic: z.string().default(""), nebius: z.string().default(""), openai: z.string().default("") }).default({ anthropic: "", nebius: "", openai: "" }),
+      models: z.object({ anthropic: z.string().default(""), nebius: z.string().default(""), openai: z.string().default(""), claude: z.string().default("") }).default({ anthropic: "", nebius: "", openai: "", claude: "" }),
       /** OpenAI-compatible endpoint (OpenRouter, Ollama, LM Studio…). "" means OPENAI_BASE_URL or api.openai.com. */
       openaiBaseUrl: z.string().default(""),
     })
-    .default({ provider: null, models: { anthropic: "", nebius: "", openai: "" }, openaiBaseUrl: "" }),
+    .default({ provider: null, models: { anthropic: "", nebius: "", openai: "", claude: "" }, openaiBaseUrl: "" }),
   tailoring: z
     .object({
       /** How far AI may move from the profile's wording. Grounding is the same at every level. */

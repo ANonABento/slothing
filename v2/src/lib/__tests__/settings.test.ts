@@ -25,6 +25,13 @@ describe("resolveLlm", () => {
     expect(r.warning).toBeNull();
   });
 
+  it("Claude Code runs only when chosen, with the claude command as its key", () => {
+    const cli = { CLAUDE_CODE_CLI: "claude" };
+    expect(resolveLlm(ai({ provider: "claude" }), cli).config).toMatchObject({ provider: "claude", label: "Claude Code", key: "claude", model: "sonnet" });
+    expect(resolveLlm(ai(), cli).config).toBeNull();
+    expect(resolveLlm(ai({ provider: "claude" }), { ANTHROPIC_API_KEY: "a" }).warning).toMatch(/Claude Code is selected but the claude command isn't installed, so Anthropic is used instead/);
+  });
+
   it("falls back with a warning when the chosen provider has no key", () => {
     const r = resolveLlm(ai({ provider: "anthropic" }), { NEBIUS_API_KEY: "n" });
     expect(r.config?.provider).toBe("nebius");
@@ -34,7 +41,7 @@ describe("resolveLlm", () => {
   it("model: settings, then env, then the built-in default", () => {
     const env = { NEBIUS_API_KEY: "n", NEBIUS_MODEL: "env-model" };
     expect(resolveLlm(ai(), env).config?.model).toBe("env-model");
-    expect(resolveLlm(ai({ models: { anthropic: "", nebius: " picked ", openai: "" } }), env).config?.model).toBe("picked");
+    expect(resolveLlm(ai({ models: { anthropic: "", nebius: " picked ", openai: "", claude: "" } }), env).config?.model).toBe("picked");
   });
 
   it("endpoint: a custom OpenAI base URL is labelled OpenAI-compatible and loses its trailing slash", () => {
@@ -52,8 +59,8 @@ describe("resolveLlm", () => {
     expect(resolveLlm(ai({ openaiBaseUrl: "http://127.0.0.1:1234/v1" }), {}).config?.provider).toBe("openai");
     expect(resolveLlm(ai({ openaiBaseUrl: "https://openrouter.ai/api/v1" }), {}).config).toBeNull();
     // A chosen local model keeps its name; a key elsewhere still comes first on Automatic.
-    expect(resolveLlm(ai({ openaiBaseUrl: "http://localhost:11434/v1", models: { anthropic: "", nebius: "", openai: "qwen3.5:4b" } }), { ANTHROPIC_API_KEY: "a" }).config?.provider).toBe("anthropic");
-    expect(resolveLlm(ai({ provider: "openai", openaiBaseUrl: "http://localhost:11434/v1", models: { anthropic: "", nebius: "", openai: "qwen3.5:4b" } }), {}).config?.model).toBe("qwen3.5:4b");
+    expect(resolveLlm(ai({ openaiBaseUrl: "http://localhost:11434/v1", models: { anthropic: "", nebius: "", openai: "qwen3.5:4b", claude: "" } }), { ANTHROPIC_API_KEY: "a" }).config?.provider).toBe("anthropic");
+    expect(resolveLlm(ai({ provider: "openai", openaiBaseUrl: "http://localhost:11434/v1", models: { anthropic: "", nebius: "", openai: "qwen3.5:4b", claude: "" } }), {}).config?.model).toBe("qwen3.5:4b");
   });
 
   it("keys from Settings fill in where the environment has none, and the environment wins", () => {
@@ -61,7 +68,7 @@ describe("resolveLlm", () => {
     expect(resolveLlm(ai(), env).config?.key).toBe("from-env");
     expect(resolveLlm(ai({ provider: "nebius" }), env).config?.key).toBe("neb-settings-key");
     const status = providerStatus(env, { ANTHROPIC_API_KEY: "from-env" });
-    expect(status.map((s) => s.keySource)).toEqual(["env", "settings", null]);
+    expect(status.map((s) => s.keySource)).toEqual(["env", "settings", null, null]);
     expect(status[1].keyHint).toBe("-key");
   });
 });
@@ -72,7 +79,7 @@ describe("settings storage", () => {
     const s = Settings.parse({ ai: { provider: "openai", openaiBaseUrl: "http://x/v1" } });
     saveSettings(s);
     expect(getSettings()).toEqual(s);
-    expect(getSettings().ai.models).toEqual({ anthropic: "", nebius: "", openai: "" });
+    expect(getSettings().ai.models).toEqual({ anthropic: "", nebius: "", openai: "", claude: "" });
   });
 });
 
