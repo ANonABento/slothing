@@ -40,7 +40,8 @@ function ModelSection({ ai, providers, onChange }: { ai: Settings["ai"]; provide
   // Same rule as the server's resolveLlm: a key, or a model server on this machine.
   const usable = (p: ProviderStatus) => p.hasKey || (p.provider === "openai" && local);
   const chosen = ai.provider ? providers.find((p) => p.provider === ai.provider)! : null;
-  const fallback = providers.find(usable);
+  // Automatic skips Claude Code, like resolveLlm.
+  const fallback = providers.find((p) => p.provider !== "claude" && usable(p));
   const withKey = providers.filter(usable);
   // The provider that will actually be called, so the model field edits the right one.
   const active = chosen && usable(chosen) ? chosen : fallback;
@@ -75,7 +76,7 @@ function ModelSection({ ai, providers, onChange }: { ai: Settings["ai"]; provide
 
   const options = [
     { value: "auto" as const, label: `Automatic${fallback ? ` (${fallback.label})` : ""}`, text: "Automatic" },
-    ...providers.map((p) => ({ value: p.provider, label: usable(p) ? (p.provider === "openai" && local ? "Local (OpenAI-compatible)" : p.label) : `${p.label} · no key`, text: p.label })),
+    ...providers.map((p) => ({ value: p.provider, label: usable(p) ? (p.provider === "openai" && local ? "Local (OpenAI-compatible)" : p.label) : `${p.label} · ${p.provider === "claude" ? "not installed" : "no key"}`, text: p.label })),
   ];
 
   return (
@@ -111,7 +112,9 @@ function ModelSection({ ai, providers, onChange }: { ai: Settings["ai"]; provide
         </Field>
       )}
       <p className="-mt-2 text-xs text-ink-3">
-        {active?.provider === "openai" && local ? (
+        {active?.provider === "claude" ? (
+          "Runs the claude command on this computer, so it uses your Claude plan, not an API key. Model: sonnet, opus or a full model id."
+        ) : active?.provider === "openai" && local ? (
           "A model on this computer: no key needed. Blank model uses the first one it serves. Small models are slower and weaker, and grounding checks still catch what they make up."
         ) : (
           <>
@@ -126,7 +129,7 @@ function ModelSection({ ai, providers, onChange }: { ai: Settings["ai"]; provide
         <p className="flex items-start gap-2 text-sm text-warn">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
           <span>
-            {chosen.label} has no API key{fallback ? `, so ${fallback.label} is used until you add one` : ""}.
+            {chosen.label} {chosen.provider === "claude" ? "isn't installed (the claude command)" : "has no API key"}{fallback ? `, so ${fallback.label} is used until you add one` : ""}.
           </span>
         </p>
       )}
@@ -155,7 +158,7 @@ function ApiKeys({ providers, onSaved }: { providers: ProviderStatus[]; onSaved:
     <div>
       <Label>API keys</Label>
       <ul className="mt-1.5 divide-y divide-rule rounded-control border border-rule">
-        {providers.map((p) => (
+        {providers.filter((p) => p.provider !== "claude").map((p) => (
           <ApiKeyRow key={p.provider} p={p} onSaved={onSaved} />
         ))}
       </ul>
